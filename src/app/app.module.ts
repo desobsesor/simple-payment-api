@@ -22,7 +22,7 @@ import { UserModule } from '../contexts/users/infrastructure/http-api/user.modul
         password: config.get('database.password'),
         database: config.get('database.name'),
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: false,
       }),
     }),
     UserModule,
