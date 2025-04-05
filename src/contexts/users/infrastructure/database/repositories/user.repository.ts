@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserOrmEntity } from '../entities/user.orm-entity';
 import { Repository } from 'typeorm';
 import { IUserRepository } from '../../../domain/ports/user-repository.port';
 import { User } from '../../../domain/models/user.entity';
@@ -8,8 +7,8 @@ import { User } from '../../../domain/models/user.entity';
 @Injectable()
 export class UserRepository implements IUserRepository {
     constructor(
-        @InjectRepository(UserOrmEntity)
-        private readonly repo: Repository<UserOrmEntity>,
+        @InjectRepository(User)
+        private readonly repo: Repository<User>,
     ) { }
 
     async findAll(): Promise<User[]> {
