@@ -22,9 +22,6 @@ export class ThrottlerGuard extends NestThrottlerGuard {
         this.logger.log('ThrottlerGuard initialized');
     }
 
-
-    // Eliminado el método getRealIp ya que ahora se usa desde network.utils
-
     protected throwThrottlingException(context: ExecutionContext): Promise<void> {
         const request = context.switchToHttp().getRequest();
         const ip = getRealIp(request);

@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import configuration from '../config/configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from '../contexts/users/infrastructure/http-api/user.module';
+import { AuthModule } from '../contexts/shared/infrastructure/auth/auth.module';
 
 @Module({
   imports: [
@@ -21,11 +22,13 @@ import { UserModule } from '../contexts/users/infrastructure/http-api/user.modul
         username: config.get('database.username'),
         password: config.get('database.password'),
         database: config.get('database.name'),
+        schema: config.get('database.schema'),
         autoLoadEntities: true,
         synchronize: false,
       }),
     }),
     UserModule,
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],

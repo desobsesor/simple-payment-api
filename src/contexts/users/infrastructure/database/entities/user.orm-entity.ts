@@ -1,12 +1,16 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
 
 @Entity('users')
 export class User {
-    @PrimaryGeneratedColumn()
-    user_id: number;
 
-    @Column({ length: 100 })
-    name: string;
+    @PrimaryGeneratedColumn({ name: 'user_id' })
+    userId: number;
+
+    @Column({ length: 50, unique: true })
+    username: string;
+
+    @Column({ length: 50 })
+    password: string;
 
     @Column({ unique: true, length: 100 })
     email: string;
@@ -22,4 +26,7 @@ export class User {
 
     @UpdateDateColumn()
     updated_at: Date;
+
+    @Column('simple-array')
+    roles: string[];
 }
