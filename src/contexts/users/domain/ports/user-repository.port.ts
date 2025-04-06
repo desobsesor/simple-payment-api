@@ -1,7 +1,7 @@
 import { User } from '../models/user.entity';
 
 export interface IUserRepository {
-    findAll(): Promise<User[]>;
-    findById(id: number): Promise<User | null>;
-    save(user: User): Promise<User>;
+    findOne(username: string): Promise<User | null>;
+    findByUsernameAndPassword(username: string, password: string): Promise<User | null>;
+    findByUsernameOrEmail(username: string, email: string): Promise<User | null>;
 }
