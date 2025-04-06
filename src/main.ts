@@ -5,8 +5,10 @@ import { ThrottlerExceptionFilter } from './contexts/shared/infrastructure/throt
 import { AppLoggerService } from './contexts/shared/infrastructure/logger/logger.service';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
+import { validateEnvVars } from './config/env-validator';
 
 async function bootstrap() {
+  validateEnvVars();
   const app = await NestFactory.create(AppModule, {
     logger: WinstonModule.createLogger({
       transports: [

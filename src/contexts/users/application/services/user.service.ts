@@ -9,11 +9,16 @@ export class UserService {
         private readonly userRepo: IUserRepository,
     ) { }
 
-    getAllUsers(): Promise<User[]> {
-        return this.userRepo.findAll();
+    findOne(username: string): Promise<User> {
+        return this.userRepo.findOne(username);
     }
 
-    createUser(user: User): Promise<User> {
-        return this.userRepo.save(user);
+    findByUsernameAndPassword(username: string, password: string): Promise<User> {
+        return this.userRepo.findByUsernameAndPassword(username, password);
     }
+
+    findByUsernameOrEmail(username: string, email: string): Promise<User> {
+        return this.userRepo.findByUsernameOrEmail(username, email);
+    }
+
 }

@@ -11,18 +11,54 @@ export class UserRepository implements IUserRepository {
         private readonly repo: Repository<User>,
     ) { }
 
-    async findAll(): Promise<User[]> {
-        const records = await this.repo.find();
-        return records.map((r) => new User(r.id, r.name, r.email));
+    async findOne(username: string): Promise<User | null> {
+        try {
+            return await this.repo.findOne({
+                where: { username },
+                select: ['userId', 'username', 'email', 'password', 'roles'],
+                cache: false
+            });
+        } catch (error) {
+            throw new Error(`Error finding user by username: ${error.message}`);
+        }
     }
 
-    async findById(id: number): Promise<User | null> {
-        const r = await this.repo.findOneBy({ id });
-        return r ? new User(r.id, r.name, r.email) : null;
+    async findById(userId: number): Promise<User | null> {
+        try {
+            return await this.repo.findOne({
+                where: { userId },
+                select: ['userId', 'username', 'email'],
+                cache: false
+            });
+        } catch (error) {
+            throw new Error(`Error finding user by ID: ${error.message}`);
+        }
     }
 
-    async save(user: User): Promise<User> {
-        const saved = await this.repo.save(user);
-        return new User(saved.id, saved.name, saved.email);
+    async findByUsernameAndPassword(username: string, password: string): Promise<User | null> {
+        try {
+            return await this.repo.findOne({
+                where: { username, password },
+                select: ['userId', 'username', 'email', 'roles'],
+                cache: false
+            });
+        } catch (error) {
+            throw new Error(`Error finding user by credentials: ${error.message}`);
+        }
+    }
+
+    async findByUsernameOrEmail(username: string, email: string): Promise<User | null> {
+        try {
+            return await this.repo.findOne({
+                where: [
+                    { username },
+                    { email }
+                ],
+                select: ['userId', 'username', 'email'],
+                cache: false
+            });
+        } catch (error) {
+            throw new Error(`Error finding user by username or email: ${error.message}`);
+        }
     }
 }
