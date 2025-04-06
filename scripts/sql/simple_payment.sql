@@ -1,5 +1,5 @@
 -- Entity-relationship model for a payment system with gateway integration
-CREATE SCHEMA payment_system;
+CREATE SCHEMA IF NOT EXISTS payment_system;
 SET search_path TO payment_system;
 -- Drop tables if they exist
 DROP TABLE IF EXISTS deliveries;
@@ -13,10 +13,13 @@ DROP TABLE IF EXISTS users;
 -- Users table
 CREATE TABLE users (
     user_id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
+    fullname VARCHAR(50) NOT NULL,
+    username VARCHAR(20) NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    email VARCHAR(50) UNIQUE NOT NULL,
     address TEXT,
     phone VARCHAR(20),
+    roles VARCHAR(50)[] DEFAULT ARRAY['customer']::VARCHAR[],
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -123,9 +126,9 @@ CREATE INDEX idx_transaction_items_product ON transaction_items(product_id);
 CREATE INDEX idx_inventory_history_product ON inventory_history(product_id);
 
 -- Sample data
-INSERT INTO users (name, email, address, phone) VALUES
-    ('Yovany Suárez Silva', 'yovanysuarezsilva@example.com', 'Calle Sinai, Timaná, Huila', '5551234567'),
-    ('Selena Suárez Medina', 'selenasuarezmedina@example.com', 'Avenida Santa Lucia, Timaná, Huila', '5557654321');
+INSERT INTO users (fullname, username, password, email, address, phone, roles) VALUES
+    ('Yovany Suárez Silva','yosuarezs','$2b$10$/o3Yb4Q3Ag5RjCo78UoR6elVTh77WzhcAM7oY0Qeq6lgpQra/k1BW', 'yovanysuarezsilva@example.com', 'Calle Sinai, Timaná, Huila', '5551234567','{customer,admin}'),
+    ('Selena Suárez Medina', 'sesuarezm','$2b$10$/o3Yb4Q3Ag5RjCo78UoR6elVTh77WzhcAM7oY0Qeq6lgpQra/k1BW', 'selenasuarezmedina@example.com', 'Avenida Santa Lucia, Timaná, Huila', '5557654321','{customer}');
 
 INSERT INTO products (name, description, price, stock) VALUES
     ('Laptop', 'High-performance computer', 1200.00, 50),
