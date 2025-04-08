@@ -42,13 +42,12 @@ async function bootstrap() {
   const logger = new AppLoggerService();
   app.useLogger(logger);
 
-
   // Register the global exception filter for ThrottlerException
   app.useGlobalFilters(new ThrottlerExceptionFilter(logger));
 
   const config = new DocumentBuilder()
     .setTitle('Simple Payment API')
-    .setDescription('Documentación de la API')
+    .setDescription('Documentation for Simple Payment API')
     .setVersion('1.0')
     .addTag('Simple Payment')
     .build();

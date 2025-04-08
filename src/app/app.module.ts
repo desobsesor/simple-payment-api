@@ -1,11 +1,14 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import configuration from '../config/configuration';
+import { ProductModule } from '../contexts/products/infrastructure/http-api/product.module';
+import { AuthModule } from '../contexts/shared/infrastructure/auth/auth.module';
+import { InventoryHistoryModule } from '../contexts/stocks/infrastructure/http-api/inventory-history.module';
+import { TransactionModule } from '../contexts/transactions/infrastructure/http-api/transaction.module';
+import { UserModule } from '../contexts/users/infrastructure/http-api/user.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import configuration from '../config/configuration';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserModule } from '../contexts/users/infrastructure/http-api/user.module';
-import { AuthModule } from '../contexts/shared/infrastructure/auth/auth.module';
 
 @Module({
   imports: [
@@ -28,7 +31,10 @@ import { AuthModule } from '../contexts/shared/infrastructure/auth/auth.module';
       }),
     }),
     UserModule,
-    AuthModule
+    AuthModule,
+    ProductModule,
+    TransactionModule,
+    InventoryHistoryModule
   ],
   controllers: [AppController],
   providers: [AppService],
