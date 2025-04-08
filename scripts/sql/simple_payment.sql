@@ -72,7 +72,9 @@ CREATE TABLE transaction_items (
 CREATE TABLE inventory_history (
     record_id SERIAL PRIMARY KEY,
     product_id INT REFERENCES products(product_id),
-    quantity INT NOT NULL,
+    quantity INT NOT NULL,  
+    previous_stock INT NOT NULL,
+    new_stock INT NOT NULL,
     movement_type VARCHAR(10) NOT NULL, -- 'in', 'out'
     transaction_id INT REFERENCES transactions(transaction_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
