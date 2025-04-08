@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, PrimaryColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Transaction } from '../../../../transactions/infrastructure/database/entities/transaction.orm-entity';
 
 @Entity('users')
 export class User {
@@ -29,4 +30,7 @@ export class User {
 
     @Column('simple-array')
     roles: string[];
+
+    @OneToMany('Transaction', 'transaction')
+    transactions: Transaction[];
 }
