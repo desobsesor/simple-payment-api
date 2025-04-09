@@ -135,21 +135,20 @@ INSERT INTO users (fullname, username, password, email, address, phone, roles) V
     ('Yovany Suárez Silva','yosuarezs','$2b$10$/o3Yb4Q3Ag5RjCo78UoR6elVTh77WzhcAM7oY0Qeq6lgpQra/k1BW', 'yovanysuarezsilva@example.com', 'Calle Sinai, Timaná, Huila', '5551234567','{customer,admin}'),
     ('Selena Suárez Medina', 'sesuarezm','$2b$10$/o3Yb4Q3Ag5RjCo78UoR6elVTh77WzhcAM7oY0Qeq6lgpQra/k1BW', 'selenasuarezmedina@example.com', 'Avenida Santa Lucia, Timaná, Huila', '5557654321','{customer}');
 
-
 INSERT INTO products (name, description, image_url, sku, price, stock, category) VALUES
-    ('Cebollines', 'Aromatic plant from the lily family, used as a condiment in various dishes for its mild onion-like flavor', 'farming/cebollines-min.jpg', 'CB7845A2Z9', 1200.00, 50,'Farming'),
-    ('Aguacate', 'Creamy tropical fruit rich in healthy fats, vitamins, and minerals, ideal for salads and guacamole', 'farming/aguacate-min.jpg', 'AG3921F7X5', 800.00, 100,'Farming'),
-    ('Limon', 'Acidic citrus used to season and flavor drinks and dishes, rich in vitamin C', 'farming/limon-min.jpg', 'LM6723K9P1', 300.00, 30,'Farming'),
-    ('Bananas', 'Energetic tropical fruit rich in potassium and fiber, grown in warm and humid climates', 'farming/bananos-min.jpg', 'BN4587D2J6', 250.00, 120,'Farming'),
-    ('Cabezona', 'Variety of onion with large bulb and intense flavor, essential in the base of many culinary preparations', 'farming/cabezona-min.jpg', 'CB5291H8M3', 400.00, 80,'Farming'),
-    ('Cebolla Larga', 'Variety of long-stemmed onion used in soups, stews, and as a fresh condiment in traditional cooking', 'farming/cebolla-larga-min.jpg', 'CL9634R5T7', 350.00, 70,'Farming'),
-    ('Cilantro', 'Aromatic herb with fresh leaves and distinctive flavor, widely used in Latin American cuisine', 'farming/cilantro-min.jpg', 'CI2378L4N9', 200.00, 60,'Farming'),
-    ('Ciruelas', 'Sweet and juicy fruit with antioxidant and digestive properties, available in various varieties', 'farming/ciruelas-min.jpg', 'CR8145V6B2', 600.00, 45,'Farming'),
-    ('Café', 'Bean cultivated in mountainous areas, processed and roasted for the preparation of the popular stimulating beverage', 'farming/cafe-min.jpg', 'CF7329Q1S8', 1500.00, 40,'Farming'),
-    ('Maíz', 'Basic cereal in Latin American diet, cultivated in various varieties for fresh and processed consumption', 'farming/maiz-min.jpg', 'MZ5812Y3C4', 350.00, 90,'Farming'),
-    ('Naranjas', 'Sweet citrus fruit rich in vitamin C, grown in temperate and subtropical climates', 'farming/naranjas-min.jpg', 'NR6497G5W1', 450.00, 75,'Farming'),
-    ('Tomates', 'Versatile fruit rich in lycopene, used as a base in sauces, salads, and various dishes', 'farming/tomates-min.jpg', 'TM3256E8U7', 380.00, 85,'Farming'),
-    ('Yuca', 'Tropical tuber with high caloric content, a staple food in many regions due to its culinary versatility', 'farming/yuca-min.jpg', 'YC9183O4I2', 320.00, 55,'Farming');
+    ('Chives', 'Aromatic plant from the lily family, used as a condiment in various dishes for its mild onion-like flavor', 'farming/cebollines-min.jpg', 'CB7845A2Z9', 5000.00, 50,'Farming'),
+    ('Avocado', 'Creamy tropical fruit rich in healthy fats, vitamins, and minerals, ideal for salads and guacamole', 'farming/aguacate-min.jpg', 'AG3921F7X5', 3500.00, 100,'Farming'),
+    ('Lemon', 'Acidic citrus used to season and flavor drinks and dishes, rich in vitamin C', 'farming/limon-min.jpg', 'LM6723K9P1', 1300.00, 30,'Farming'),
+    ('Bananas', 'Energetic tropical fruit rich in potassium and fiber, grown in warm and humid climates', 'farming/bananos-min.jpg', 'BN4587D2J6', 1100.00, 120,'Farming'),
+    ('Onion', 'Variety of onion with large bulb and intense flavor, essential in the base of many culinary preparations', 'farming/cabezona-min.jpg', 'CB5291H8M3', 1800.00, 80,'Farming'),
+    ('Green Onion', 'Variety of long-stemmed onion used in soups, stews, and as a fresh condiment in traditional cooking', 'farming/cebolla-larga-min.jpg', 'CL9634R5T7', 1500.00, 70,'Farming'),
+    ('Coriander', 'Aromatic herb with fresh leaves and distinctive flavor, widely used in Latin American cuisine', 'farming/cilantro-min.jpg', 'CI2378L4N9', 900.00, 60,'Farming'),
+    ('Plums', 'Sweet and juicy fruit with antioxidant and digestive properties, available in various varieties', 'farming/ciruelas-min.jpg', 'CR8145V6B2', 2700.00, 45,'Farming'),
+    ('Coffee', 'Bean cultivated in mountainous areas, processed and roasted for the preparation of the popular stimulating beverage', 'farming/cafe-min.jpg', 'CF7329Q1S8', 6700.00, 40,'Farming'),
+    ('Corn', 'Basic cereal in Latin American diet, cultivated in various varieties for fresh and processed consumption', 'farming/maiz-min.jpg', 'MZ5812Y3C4', 1500.00, 90,'Farming'),
+    ('Oranges', 'Sweet citrus fruit rich in vitamin C, grown in temperate and subtropical climates', 'farming/naranjas-min.jpg', 'NR6497G5W1', 2000.00, 75,'Farming'),
+    ('Tomatoes', 'Versatile fruit rich in lycopene, used as a base in sauces, salads, and various dishes', 'farming/tomates-min.jpg', 'TM3256E8U7', 1700.00, 85,'Farming'),
+    ('Cassava', 'Tropical tuber with high caloric content, a staple food in many regions due to its culinary versatility', 'farming/yuca-min.jpg', 'YC9183O4I2', 1400.00, 55,'Farming');
 
 INSERT INTO payment_methods (user_id, type, details, is_default) VALUES
     (1, 'card', '{"type": "visa", "last4": "4242", "token": "tok_test_123"}', TRUE),
