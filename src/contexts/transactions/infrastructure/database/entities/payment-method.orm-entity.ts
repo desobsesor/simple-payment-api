@@ -3,8 +3,8 @@ import { User } from '../../../../users/infrastructure/database/entities/user.or
 
 @Entity('payment_methods')
 export class PaymentMethod {
-    @PrimaryGeneratedColumn('increment')
-    payment_method_id: number;
+    @PrimaryGeneratedColumn({ name: 'payment_method_id' })
+    paymentMethodId: number;
 
     @ManyToOne(() => User)
     @JoinColumn({ name: 'user_id' })
@@ -16,9 +16,9 @@ export class PaymentMethod {
     @Column({ type: 'jsonb', nullable: true })
     details: any;
 
-    @Column({ type: 'boolean', default: false })
-    is_default: boolean;
+    @Column({ name: 'is_default', type: 'boolean', default: false })
+    isDefault: boolean;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-    created_at: Date;
+    @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt: Date;
 }

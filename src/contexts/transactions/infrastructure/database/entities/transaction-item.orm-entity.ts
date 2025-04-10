@@ -16,7 +16,7 @@ export class TransactionItem {
     @JoinColumn({ name: 'product_id' })
     product: Product;
 
-    @Column({ type: 'integer' })
+    @Column({ type: 'decimal', nullable: false, default: 1, precision: 10, scale: 2 })
     quantity: number;
 
     @Column({ name: 'unit_price', type: 'decimal', precision: 10, scale: 2 })

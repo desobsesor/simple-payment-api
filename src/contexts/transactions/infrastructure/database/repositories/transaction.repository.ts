@@ -24,9 +24,12 @@ export class TransactionRepository implements TransactionRepositoryPort {
         private readonly productRepository: Repository<Product>
     ) { }
 
-    async create(transaction: DomainTransaction): Promise<DomainTransaction> {
+    async create(transaction: DomainTransaction | any): Promise<DomainTransaction> {
+        const productId = transaction.items[0].productId;
         const ormTransaction = await this.toOrm(transaction);
         const savedTransaction = await this.transactionRepository.save(ormTransaction);
+        const transaction_ = await this.transactionRepository.findOneBy({ transactionId: savedTransaction.transactionId }) as Transaction;
+        const product_ = await this.productRepository.findOneBy({ productId }) as Product;
 
         // Save payment method if exists
         if (transaction.paymentMethod) {
@@ -34,20 +37,30 @@ export class TransactionRepository implements TransactionRepositoryPort {
                 ...transaction.paymentMethod,
                 user: await this.userRepository.findOneBy({ userId: transaction.userId }) as any
             });
-            await this.paymentMethodRepository.save(paymentMethod);
+            const savedPaymentMethod: any = await this.paymentMethodRepository.save(paymentMethod);
+
+            // Assign the saved payment method to the transaction
+            transaction_.paymentMethod = savedPaymentMethod;
+            await this.transactionRepository.save(transaction_);
         }
 
         // Save transaction items
         if (transaction.items && transaction.items.length > 0) {
-            const items: any = transaction.items.map(async item => {
-                return this.transactionItemRepository.create({
-                    transaction: await this.transactionRepository.findOneBy({ transactionId: savedTransaction.transactionId }),
-                    product: await this.productRepository.findOneBy({ productId: item.product.productId }),
-                    quantity: item.quantity,
+            // an array of TransactionItem objects is created
+            const itemsToCreate = [];
+
+            for (const item of transaction.items) {
+                const transactionItem = this.transactionItemRepository.create({
+                    transaction: transaction_,
+                    product: product_,
+                    quantity: item.quantity || 1, // Use item.quantity if it exists, else use 1 as default value
                     unitPrice: item.unitPrice
-                });
-            });
-            await this.transactionItemRepository.save(items);
+                } as unknown as TransactionItem);
+                itemsToCreate.push(transactionItem);
+            }
+
+            // all items are saved in a single transaction
+            await this.transactionItemRepository.save(itemsToCreate);
         }
 
         return this.toDomain(savedTransaction);
@@ -73,7 +86,6 @@ export class TransactionRepository implements TransactionRepositoryPort {
             transactionId: ormTransaction.transactionId,
             status: ormTransaction.status.toString(),
             totalAmount: ormTransaction.totalAmount,
-            //status: ormTransaction.status.toString(),
             paymentMethod: ormTransaction.paymentMethod,
             items: ormTransaction.items,
             userId: ormTransaction.user.userId,
@@ -97,17 +109,22 @@ export class TransactionRepository implements TransactionRepositoryPort {
     private async toOrm(domainTransaction: DomainTransaction): Promise<Transaction> {
         const user: any = await this.userRepository.findOneBy({ userId: domainTransaction.userId });
 
-        const items = domainTransaction.items?.map(async item => ({
+        const items: TransactionItem[] = domainTransaction.items?.map(async (item: any) => ({
             ...item,
-            product: await this.productRepository.findOneBy({ productId: item.product.productId })
-        }));
+            product: await this.productRepository.findOneBy({ productId: item.productId })
+        })) as unknown as TransactionItem[];
+
+        // Ensure that totalAmount has a valid value
+        const totalAmount = domainTransaction.totalAmount ||
+            (domainTransaction['amount'] ? domainTransaction['amount'] : 0);
+
         // Implement mapping from domain to ORM
         return {
             transactionId: domainTransaction.transactionId,
-            totalAmount: domainTransaction.totalAmount,
+            totalAmount: totalAmount,
             status: domainTransaction.status,
             paymentMethod: domainTransaction.paymentMethod,
-            items: domainTransaction.items,
+            items,
             user,
             createdAt: domainTransaction.createdAt,
             updatedAt: domainTransaction.updatedAt,

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import * as fs from 'fs';
+import jwt, { Algorithm } from "jsonwebtoken";
 import * as path from 'path';
 import { createLogger, format, transports } from 'winston';
 import { UserService } from '../../../users/application/services/user.service';
@@ -12,7 +12,6 @@ export class AuthService {
     private logger: any;
 
     constructor(
-        private jwtService: JwtService,
         private userService: UserService
     ) {
         const logDir = path.join(__dirname, '../../../../../logs');
@@ -36,6 +35,12 @@ export class AuthService {
         });
     }
 
+    /**
+     * Validates user credentials
+     * @param username - The username to validate
+     * @param password - The password to validate
+     * @returns The user object without password if validation succeeds, null otherwise
+     */
     async validateUser(username: string, password: string): Promise<any> {
         const user: User = await this.userService.findOne(username);
         if (user && (await bcrypt.compare(password, user.password))) {
@@ -45,18 +50,33 @@ export class AuthService {
         return null;
     }
 
+    /**
+     * Generates a login token for the user
+     * @param user - The user object to generate token for
+     * @returns Object containing the access token
+     */
     async login(user: any) {
-
         this.logger.info(`user: ${JSON.stringify(user)}`);
-        const payload = {
-            username: user.username,
-            sub: user.userId,
-            roles: user.roles,
-        };
-        const accessToken = this.jwtService.sign(payload);
-        this.logger.info(`accessToken: ${accessToken} logged in`);
+        const payload = { ...user };
+        const accessToken = await this.generateToken(payload);
+
         return {
             access_token: accessToken
         };
     }
+
+    /**
+     * Generates a JWT token
+     * @param payload - The data to be encoded in the token
+     * @param algorithm - The algorithm to use for signing the token (defaults to HS256)
+     * @returns The generated JWT token
+     * @private
+     */
+    private async generateToken(payload: any, algorithm: Algorithm = "HS256"): Promise<any> {
+        const secret = process.env.JWT_SECRET ?? "secret-key";
+        const token = jwt.sign(payload, secret, { expiresIn: "2h", algorithm });
+
+        return token;
+    };
+
 }
