@@ -11,22 +11,22 @@ export class InventoryHistory {
     @JoinColumn({ name: 'product_id' })
     product: Product;
 
-    @Column()
+    @Column({ name: 'previous_stock' })
     previousStock: number;
 
-    @Column()
+    @Column({ name: 'new_stock' })
     newStock: number;
 
     @Column()
     quantity: number;
 
-    @Column({ type: 'varchar', length: 10 })
+    @Column({ name: 'movement_type', type: 'varchar', length: 10 })
     movementType: 'in' | 'out' | string;
 
     @ManyToOne(() => Transaction)
     @JoinColumn({ name: 'transaction_id' })
     transaction: Transaction;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     createdAt: Date;
 }

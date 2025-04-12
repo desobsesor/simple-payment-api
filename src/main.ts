@@ -33,7 +33,7 @@ async function bootstrap() {
   });
 
   app.enableCors({
-    origin: ['http://localhost:8081', 'http://192.168.101.73:8081', 'exp://192.168.101.73:8081'],
+    origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Accept',
     credentials: true,

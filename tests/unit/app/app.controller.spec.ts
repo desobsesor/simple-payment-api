@@ -16,7 +16,7 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return "API Service running"', () => {
-      expect(appController.getHello()).toBe('API services for simple product payment!');
+      expect(appController.getAppStarted()).toBe('API services for simple product payment!');
     });
   });
 });
