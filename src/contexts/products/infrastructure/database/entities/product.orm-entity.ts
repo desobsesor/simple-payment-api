@@ -9,6 +9,12 @@ export class Product {
     @Column({ length: 100 })
     name: string;
 
+    @Column({ name: 'image_url', length: 255 })
+    imageUrl: string;
+
+    @Column({ length: 20 })
+    sku: string;
+
     @Column({ type: 'decimal', precision: 10, scale: 2 })
     price: number;
 

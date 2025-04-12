@@ -14,7 +14,7 @@ export class ProductRepository implements IProductRepository {
     async findAll(): Promise<Product[]> {
         try {
             return await this.repo.find({
-                select: ['productId', 'name', 'price', 'description'],
+                select: ['productId', 'name', 'price', 'description', 'imageUrl', 'sku', 'category', 'stock'],
                 cache: false
             });
         } catch (error) {
@@ -26,7 +26,7 @@ export class ProductRepository implements IProductRepository {
         try {
             return await this.repo.findOne({
                 where: { productId },
-                select: ['productId', 'name', 'price', 'description'],
+                select: ['productId', 'name', 'price', 'description', 'imageUrl', 'sku', 'category', 'stock'],
                 cache: false
             });
         } catch (error) {
@@ -47,7 +47,7 @@ export class ProductRepository implements IProductRepository {
         try {
             return await this.repo.find({
                 where: { name },
-                select: ['productId', 'name', 'price'],
+                select: ['productId', 'name', 'price', 'description', 'imageUrl', 'sku', 'category', 'stock'],
                 cache: false
             });
         } catch (error) {

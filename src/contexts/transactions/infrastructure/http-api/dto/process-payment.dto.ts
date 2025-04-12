@@ -70,4 +70,9 @@ export class ProcessPaymentDto {
     @ValidateNested({ each: true })
     @Type(() => ProductItem)
     products: ProductItem[];
+
+    @ApiProperty({ description: 'userId', example: 1 })
+    @IsNumber()
+    @IsPositive()
+    userId: number;
 }

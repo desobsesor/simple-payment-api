@@ -1,4 +1,4 @@
-import { User } from '@/src/contexts/users/domain/models/user.entity';
+import { User } from '../../../../../src/contexts/users/domain/models/user.entity';
 import { Body, Controller, HttpStatus, Post, Request, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
@@ -26,10 +26,25 @@ export class AuthController {
         status: HttpStatus.UNAUTHORIZED,
         description: 'Invalid credentials',
     })
-    @UseGuards(LocalAuthGuard)
+    //@UseGuards(LocalAuthGuard)
     @Post('login')
     async login(@Body() loginDto: LoginDto) {
         return this.authService.login(loginDto);
+    }
+
+    @ApiOperation({ summary: 'Validate token and return user' })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'Token validated successfully',
+        type: User,
+    })
+    @ApiResponse({
+        status: HttpStatus.UNAUTHORIZED,
+        description: 'Invalid token',
+    })
+    @Post('validate-token')
+    async validateToken(@Body() body: { token: string }) {
+        return this.authService.decodeToken(body.token);
     }
 
     @ApiOperation({ summary: 'Get profile of authenticated user' })

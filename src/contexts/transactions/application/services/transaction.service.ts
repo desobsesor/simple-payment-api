@@ -6,8 +6,10 @@ import { UpdateStockDto } from '../../infrastructure/http-api/dto/update-stock.d
 import { Transaction } from '../../domain/entities/transaction.entity';
 import { WompiService } from '../../../shared/infrastructure/services/wompi.service';
 import { ProductService } from '../../../products/application/services/product.service';
-import { CreatePaymentDto } from '@/src/contexts/shared/infrastructure/dto/create-payment.dto';
+import { CreatePaymentDto } from '../../../shared/infrastructure/dto/create-payment.dto';
 import { InventoryHistoryRepository } from '../../../stocks/infrastructure/database/repositories/inventory-history.repository';
+import { InventoryHistory } from '../../../stocks/domain/entities/inventory-history.entity';
+import { PaymentMethod } from '../../infrastructure/database/entities/payment-method.orm-entity';
 
 @Injectable()
 export class TransactionService {
@@ -22,21 +24,28 @@ export class TransactionService {
     ) { }
 
     async create(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
-        // Implementar lógica para crear transacción
-        return this.transactionRepository.create(createTransactionDto as unknown as Transaction);
+        const transaction: Transaction = {
+            ...createTransactionDto,
+            totalAmount: createTransactionDto.amount,
+            transactionId: 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        } as unknown as Transaction;
+        return this.transactionRepository.create(transaction);
     }
 
     async processPayment(processPaymentDto: ProcessPaymentDto): Promise<Transaction> {
-        // 1. Validate payment details
+        // Validate payment details
         this.validatePaymentData(processPaymentDto);
-        // 2. Crear transacción en estado 'pending'
+        // Create transaction in 'pending' status
         const transaction = await this.create({
             amount: processPaymentDto.amount,
             paymentMethod: processPaymentDto.paymentMethod,
             status: 'pending',
             items: processPaymentDto.products,
-            userId: 1 //processPaymentDto.userId,
+            userId: processPaymentDto.userId,
         })
+
         const createPaymentDto: CreatePaymentDto = {
             amount: processPaymentDto.amount,
             paymentMethod: processPaymentDto.paymentMethod,
@@ -77,20 +86,32 @@ export class TransactionService {
     async updateStock(productId: number, updateStockDto: UpdateStockDto) {
         const product: any = await this.productService.findOne(productId);
         const previousStock = product.stock;
-        product.stock += updateStockDto.quantity;
+        if (updateStockDto.movementType === 'out') {
+            if (product.stock < updateStockDto.quantity) {
+                throw new Error('Not enough stock');
+            }
+            product.stock -= updateStockDto.quantity;
+        }
+
+        if (updateStockDto.movementType === 'in') {
+            if (updateStockDto.quantity <= 0) {
+                throw new Error('Quantity must be greater than zero');
+            }
+            product.stock += updateStockDto.quantity;
+        }
 
         await this.productService.updateStock(productId, product);
 
         // Create inventory history record
-        const inventoryHistory = {
+        const inventoryHistory: InventoryHistory = {
+            movementType: updateStockDto.movementType,
             productId: productId,
             previousStock: previousStock,
             newStock: product.stock,
             quantity: updateStockDto.quantity,
-            type: updateStockDto.quantity > 0 ? 'increase' : 'decrease',
-            source: 'transaction',
-            timestamp: new Date(),
-            userId: 1 // TODO: Get from authenticated user
+            recordId: 0,
+            createdAt: new Date(),
+            transactionId: updateStockDto.transactionId,
         };
 
         await this.inventoryHistoryRepository.create(inventoryHistory);
