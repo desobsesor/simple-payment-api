@@ -1,10 +1,10 @@
-import { Product } from '@/src/contexts/products/infrastructure/database/entities/product.orm-entity';
-import { ProductRepository } from '@/src/contexts/products/infrastructure/database/repositories/product.repository';
-import { ProductModule } from '@/src/contexts/products/infrastructure/http-api/product.module';
-import { Transaction } from '@/src/contexts/transactions/infrastructure/database/entities/transaction.orm-entity';
-import { TransactionModule } from '@/src/contexts/transactions/infrastructure/http-api/transaction.module';
-import { UserRepository } from '@/src/contexts/users/infrastructure/database/repositories/user.repository';
-import { UserModule } from '@/src/contexts/users/infrastructure/http-api/user.module';
+import { Product } from '../../../products/infrastructure/database/entities/product.orm-entity';
+import { ProductRepository } from '../../../products/infrastructure/database/repositories/product.repository';
+import { ProductModule } from '../../../products/infrastructure/http-api/product.module';
+import { Transaction } from '../../../transactions/infrastructure/database/entities/transaction.orm-entity';
+import { TransactionModule } from '../../../transactions/infrastructure/http-api/transaction.module';
+import { UserRepository } from '../../../users/infrastructure/database/repositories/user.repository';
+import { UserModule } from '../../../users/infrastructure/http-api/user.module';
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../../../users/infrastructure/database/entities/user.orm-entity';

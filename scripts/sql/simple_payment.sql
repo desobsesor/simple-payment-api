@@ -151,8 +151,8 @@ INSERT INTO products (name, description, image_url, sku, price, stock, category)
     ('Cassava', 'Tropical tuber with high caloric content, a staple food in many regions due to its culinary versatility', 'farming/yuca-min.jpg', 'YC9183O4I2', 1400.00, 55,'Farming');
 
 INSERT INTO payment_methods (user_id, type, details, is_default) VALUES
-    (1, 'card', '{"type": "visa", "last4": "4242", "token": "tok_test_123"}', TRUE),
-    (2, 'card', '{"type": "mastercard", "last4": "5555", "token": "tok_test_456"}', TRUE);
+    (1, 'card', '{"type": "debit", "brand": "visa", "token": {"expiryYear": "26", "expiryMonth": "11", "cardholderName": "Yovany Suárez Silva"}, "lastFour": "5432", "cardNumber":"1234567898765432"}', TRUE),
+    (1, 'card', '{"type": "credit", "brand": "mastercard", "token": {"expiryYear": "28", "expiryMonth": "01", "cardholderName": "Yovany Suárez Silva"}, "lastFour": "4444", "cardNumber":"1111222233334444"}', FALSE);
 
 INSERT INTO transactions (user_id, payment_method_id, total_amount, status, gateway_reference, gateway_details) VALUES
     (1, 1, 100.00, 'completed', 'wompi_ref_123', '{"status": "approved", "payment_method": "card"}');

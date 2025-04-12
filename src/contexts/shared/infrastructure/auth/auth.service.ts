@@ -56,8 +56,9 @@ export class AuthService {
      * @returns Object containing the access token
      */
     async login(user: any) {
-        this.logger.info(`user: ${JSON.stringify(user)}`);
-        const payload = { ...user };
+        const { password, ...userWithoutPassword } = user;
+        const payload = { ...userWithoutPassword };
+        this.logger.info(`Payload to generate token: ${JSON.stringify(payload)}`);
         const accessToken = await this.generateToken(payload);
 
         return {
@@ -78,5 +79,21 @@ export class AuthService {
 
         return token;
     };
+
+    /**
+     * Decodes a JWT token
+     * @param token - The JWT token to decode
+     * @returns The decoded token payload or null if invalid
+     */
+    async decodeToken(token: string): Promise<any> {
+        try {
+            const secret = process.env.JWT_SECRET ?? "secret-key";
+            const decoded = jwt.verify(token, secret);
+            return decoded;
+        } catch (error) {
+            this.logger.error(`Error decoding token: ${error.message}`);
+            return null;
+        }
+    }
 
 }

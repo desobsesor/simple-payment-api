@@ -6,8 +6,8 @@ import { TransactionRepositoryPort } from '../../../domain/ports/transaction.rep
 import { Transaction as DomainTransaction } from '../../../domain/entities/transaction.entity';
 import { PaymentMethod } from '../entities/payment-method.orm-entity';
 import { TransactionItem } from '../entities/transaction-item.orm-entity';
-import { User } from '@/src/contexts/users/domain/models/user.entity';
-import { Product } from '@/src/contexts/products/domain/models/product.entity';
+import { User } from '../../../../users/domain/models/user.entity';
+import { Product } from '../../../../products/domain/models/product.entity';
 
 @Injectable()
 export class TransactionRepository implements TransactionRepositoryPort {
@@ -33,14 +33,29 @@ export class TransactionRepository implements TransactionRepositoryPort {
 
         // Save payment method if exists
         if (transaction.paymentMethod) {
-            const paymentMethod = this.paymentMethodRepository.create({
-                ...transaction.paymentMethod,
-                user: await this.userRepository.findOneBy({ userId: transaction.userId }) as any
+            // Verify if the payment method already exists for the user
+            const existingPaymentMethod = await this.paymentMethodRepository.findOne({
+                where: {
+                    user: { userId: transaction.userId },
+                    type: transaction.paymentMethod.type
+                }
             });
-            const savedPaymentMethod: any = await this.paymentMethodRepository.save(paymentMethod);
 
-            // Assign the saved payment method to the transaction
-            transaction_.paymentMethod = savedPaymentMethod;
+            if (existingPaymentMethod) {
+                // If the payment method already exists, assign it to the transaction
+                transaction_.paymentMethod = existingPaymentMethod;
+            } else {
+                // If the payment method doesn't exist, create a new one
+                const paymentMethod = this.paymentMethodRepository.create({
+                    ...transaction.paymentMethod,
+                    user: await this.userRepository.findOneBy({ userId: transaction.userId }) as any
+                });
+                const savedPaymentMethod: any = await this.paymentMethodRepository.save(paymentMethod);
+                // Assign the saved payment method to the transaction
+                transaction_.paymentMethod = savedPaymentMethod;
+            }
+
+            // Save the transaction with the payment method
             await this.transactionRepository.save(transaction_);
         }
 

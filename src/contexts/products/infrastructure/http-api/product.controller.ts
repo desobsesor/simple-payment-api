@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpStatus, Param, Put, UseGuards } from '@nestj
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProductService } from '../../application/services/product.service';
 import { Product } from '../../domain/models/product.entity';
-import { LocalAuthGuard } from '@/src/contexts/shared/infrastructure/auth/guards/local-auth.guard';
+import { LocalAuthGuard } from '../../../shared/infrastructure/auth/guards/local-auth.guard';
 
 @ApiTags('Products')
 @Controller('v1/products')
@@ -10,7 +10,7 @@ export class ProductController {
     constructor(private readonly productService: ProductService) { }
 
     @Get()
-    @UseGuards(LocalAuthGuard)
+    //@UseGuards(LocalAuthGuard)
     @ApiOperation({
         summary: 'Get all products',
         description: 'Requires authentication with valid credentials'

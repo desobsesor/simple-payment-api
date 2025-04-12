@@ -6,9 +6,9 @@ import { UpdateStockDto } from '../../infrastructure/http-api/dto/update-stock.d
 import { Transaction } from '../../domain/entities/transaction.entity';
 import { WompiService } from '../../../shared/infrastructure/services/wompi.service';
 import { ProductService } from '../../../products/application/services/product.service';
-import { CreatePaymentDto } from '@/src/contexts/shared/infrastructure/dto/create-payment.dto';
+import { CreatePaymentDto } from '../../../shared/infrastructure/dto/create-payment.dto';
 import { InventoryHistoryRepository } from '../../../stocks/infrastructure/database/repositories/inventory-history.repository';
-import { InventoryHistory } from '@/src/contexts/stocks/domain/entities/inventory-history.entity';
+import { InventoryHistory } from '../../../stocks/domain/entities/inventory-history.entity';
 import { PaymentMethod } from '../../infrastructure/database/entities/payment-method.orm-entity';
 
 @Injectable()
