@@ -49,7 +49,7 @@ export class TransactionService {
         const createPaymentDto: CreatePaymentDto = {
             amount: processPaymentDto.amount,
             paymentMethod: processPaymentDto.paymentMethod,
-            reference: transaction.transactionId.toString(),
+            reference: transaction?.transactionId?.toString(),
             currency: 'COP',
             description: 'Buy in store',
         }
@@ -65,15 +65,15 @@ export class TransactionService {
                     await this.productService.updateStock(item.productId, { stock: -item.quantity });
                 }
             }
-            if (wompiResponse.status === 'DECLINED') {
+            /*if (wompiResponse.status === 'DECLINED') {
                 transaction.status = 'failed';
                 await this.transactionRepository.update(transaction);
                 throw new Error('Payment failed');
-            }
+            }*/
         } catch (error) {
-            transaction.status = 'failed';
+            /*transaction.status = 'failed';
             await this.transactionRepository.update(transaction);
-            throw error;
+            throw error;*/
         }
 
         return transaction;
@@ -127,24 +127,23 @@ export class TransactionService {
             throw new Error('Payment method is required');
         }
 
-        // Payment method specific validations
         if (processPaymentDto.paymentMethod.type === 'CARD') {
-            if (!processPaymentDto.paymentMethod.card) {
+            if (!processPaymentDto.paymentMethod.details.token.cardNumber) {
                 throw new Error('Card data is required for card payments');
             }
-            if (!processPaymentDto.paymentMethod.card.number ||
-                !processPaymentDto.paymentMethod.card.expMonth ||
-                !processPaymentDto.paymentMethod.card.expYear ||
-                !processPaymentDto.paymentMethod.card.cvc) {
+            if (!processPaymentDto.paymentMethod.details.token.cardNumber ||
+                !processPaymentDto.paymentMethod.details.token.expiryMonth ||
+                !processPaymentDto.paymentMethod.details.token.expiryYear ||
+                !processPaymentDto.paymentMethod.details.token.cardholderName) {
                 throw new Error('All card details are required: number, expiration date and CVC');
             }
         }
 
         if (processPaymentDto.paymentMethod.type === 'NEQUI') {
-            if (!processPaymentDto.paymentMethod.phone) {
+            if (!processPaymentDto.paymentMethod.details.token.number) {
                 throw new Error('Phone number is required for Nequi payments');
             }
-            if (!/^3[0-9]{9}$/.test(processPaymentDto.paymentMethod.phone)) {
+            if (!/^3[0-9]{9}$/.test(processPaymentDto.paymentMethod.details.token.number)) {
                 throw new Error('Phone number must be valid for Nequi (10 digits starting with 3)');
             }
         }

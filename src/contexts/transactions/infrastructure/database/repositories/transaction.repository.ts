@@ -97,6 +97,9 @@ export class TransactionRepository implements TransactionRepositoryPort {
 
     private toDomain(ormTransaction: Transaction): DomainTransaction {
         // Implement mapping from ORM to domain
+        if (!ormTransaction) {
+            return null;
+        }
         return {
             transactionId: ormTransaction.transactionId,
             status: ormTransaction.status.toString(),

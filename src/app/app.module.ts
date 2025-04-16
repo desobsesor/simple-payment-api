@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import configuration from '../config/configuration';
 import { ProductModule } from '../contexts/products/infrastructure/http-api/product.module';
 import { AuthModule } from '../contexts/shared/infrastructure/auth/auth.module';
+import { AppLoggerService } from '../contexts/shared/infrastructure/logger/logger.service';
 import { InventoryHistoryModule } from '../contexts/stocks/infrastructure/http-api/inventory-history.module';
 import { TransactionModule } from '../contexts/transactions/infrastructure/http-api/transaction.module';
 import { UserModule } from '../contexts/users/infrastructure/http-api/user.module';
@@ -37,6 +38,6 @@ import { AppService } from './app.service';
     InventoryHistoryModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AppLoggerService],
 })
 export class AppModule { }

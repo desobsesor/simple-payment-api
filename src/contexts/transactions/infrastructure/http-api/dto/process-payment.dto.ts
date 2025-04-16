@@ -50,9 +50,9 @@ export class ProcessPaymentDto {
     @ApiProperty({ description: 'type', example: 'CARD' })
     @IsString()
     @IsNotEmpty()
-    type: 'CARD' | 'NEQUI';
+    type: 'CARD' | 'NEQUI' | 'PSE';
 
-    @ApiProperty({ description: 'paymentMethod', example: { cardNumber: '1234567890123456', cardHolder: 'John Doe', expiryDate: '12/25', cvv: '123' } })
+    @ApiProperty({ description: 'paymentMethod', example: { cardNumber: '1234567890123456', cardholderName: 'John Doe', expiryDate: '12/25', cvv: '123' } })
     @ValidateNested()
     @Type(() => Object, {
         discriminator: {

@@ -71,9 +71,8 @@ export class AuthService {
      * @param payload - The data to be encoded in the token
      * @param algorithm - The algorithm to use for signing the token (defaults to HS256)
      * @returns The generated JWT token
-     * @private
      */
-    private async generateToken(payload: any, algorithm: Algorithm = "HS256"): Promise<any> {
+    async generateToken(payload: any, algorithm: Algorithm = "HS256"): Promise<any> {
         const secret = process.env.JWT_SECRET ?? "secret-key";
         const token = jwt.sign(payload, secret, { expiresIn: "2h", algorithm });
 
@@ -86,14 +85,23 @@ export class AuthService {
      * @returns The decoded token payload or null if invalid
      */
     async decodeToken(token: string): Promise<any> {
+        const secret = process.env.JWT_SECRET ?? "secret-key";
         try {
-            const secret = process.env.JWT_SECRET ?? "secret-key";
             const decoded = jwt.verify(token, secret);
             return decoded;
         } catch (error) {
-            this.logger.error(`Error decoding token: ${error.message}`);
             return null;
         }
+    }
+
+    /**
+     * get profile of authenticated user
+     * @param user - The user object to get profile for
+     * @returns The user object without password
+     */
+    async getProfile(user: any) {
+        const { password, ...result } = user;
+        return result;
     }
 
 }
