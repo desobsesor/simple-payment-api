@@ -226,7 +226,7 @@ describe('ThrottlerGuard', () => {
 
         it('should not skip rate limiting for regular API requests', async () => {
             // Prepare
-            const apiRequest = { ...mockRequest, url: '/api/v1/health' };
+            const apiRequest = { ...mockRequest, url: '/api/v1/regular-endpoint' };
             mockExecutionContext.switchToHttp().getRequest.mockReturnValue(apiRequest);
             mockExecutionContext.getType.mockReturnValue('http');
 
@@ -234,7 +234,67 @@ describe('ThrottlerGuard', () => {
             const result: boolean = await (guard as any).shouldSkip(mockExecutionContext as unknown as ExecutionContext);
 
             // Assert
-            expect(result).toBe(true);
+            expect(result).toBe(false);
+        });
+
+        // Test for internal network IP addresses
+        it('should handle requests from internal network IPs correctly', async () => {
+            // Prepare
+            const internalRequest = {
+                ...mockRequest,
+                url: '/api/v1/regular-endpoint',
+                headers: {
+                    'x-forwarded-for': '10.0.0.1',
+                    'user-agent': 'test-agent'
+                }
+            };
+            mockExecutionContext.switchToHttp().getRequest.mockReturnValue(internalRequest);
+            mockExecutionContext.getType.mockReturnValue('http');
+
+            // Act
+            const result: boolean = await (guard as any).shouldSkip(mockExecutionContext as unknown as ExecutionContext);
+
+            // Assert - by default should not skip (would need implementation to skip internal IPs)
+            expect(result).toBe(false);
+        });
+
+        // Test for authenticated admin users
+        it('should handle requests from authenticated admin users correctly', async () => {
+            // Prepare
+            const adminRequest = {
+                ...mockRequest,
+                url: '/api/v1/regular-endpoint',
+                user: { role: 'admin' } // Simulating an authenticated admin user
+            };
+            mockExecutionContext.switchToHttp().getRequest.mockReturnValue(adminRequest);
+            mockExecutionContext.getType.mockReturnValue('http');
+
+            // Act
+            const result: boolean = await (guard as any).shouldSkip(mockExecutionContext as unknown as ExecutionContext);
+
+            // Assert - by default should not skip (would need implementation to skip admin users)
+            expect(result).toBe(false);
+        });
+
+        // Test for custom headers
+        it('should handle requests with custom headers correctly', async () => {
+            // Prepare
+            const customHeaderRequest = {
+                ...mockRequest,
+                url: '/api/v1/regular-endpoint',
+                headers: {
+                    'user-agent': 'test-agent',
+                    'x-api-key': 'test-api-key' // Example of a custom header
+                }
+            };
+            mockExecutionContext.switchToHttp().getRequest.mockReturnValue(customHeaderRequest);
+            mockExecutionContext.getType.mockReturnValue('http');
+
+            // Act
+            const result: boolean = await (guard as any).shouldSkip(mockExecutionContext as unknown as ExecutionContext);
+
+            // Assert - by default should not skip (would need implementation to skip based on custom headers)
+            expect(result).toBe(false);
         });
     });
 

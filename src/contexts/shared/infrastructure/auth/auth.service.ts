@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import * as fs from 'fs';
-import jwt, { Algorithm } from "jsonwebtoken";
+import * as jwt from "jsonwebtoken";
+import { Algorithm } from "jsonwebtoken";
 import * as path from 'path';
 import { createLogger, format, transports } from 'winston';
 import { UserService } from '../../../users/application/services/user.service';
