@@ -1,11 +1,11 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ThrottlerExceptionFilter } from './contexts/shared/infrastructure/throttler/exceptions/throttler-exception.filter';
-import { AppLoggerService } from './contexts/shared/infrastructure/logger/logger.service';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
+import { AppModule } from './app/app.module';
 import { validateEnvVars } from './config/env-validator';
+import { AppLoggerService } from './contexts/shared/infrastructure/logger/logger.service';
+import { ThrottlerExceptionFilter } from './contexts/shared/infrastructure/throttler/exceptions/throttler-exception.filter';
 
 async function bootstrap() {
   validateEnvVars();
@@ -35,7 +35,7 @@ async function bootstrap() {
   app.enableCors({
     origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type, Accept',
+    allowedHeaders: 'Content-Type, Accept, Authorization',
     credentials: true,
   });
 
@@ -55,7 +55,7 @@ async function bootstrap() {
   const document = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(process.env.PORT || 3000);
+  await app.listen(process.env.PORT || 3000, '0.0.0.0');
   console.log(`API is running on: http://${process.env.HOST}:${process.env.PORT}`);
 }
 bootstrap();

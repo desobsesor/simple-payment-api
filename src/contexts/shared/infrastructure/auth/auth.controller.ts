@@ -60,7 +60,7 @@ export class AuthController {
     @Post('profile')
     @UseGuards(LocalAuthGuard)
     async getProfile(@Request() req: { user: User }) {
-        return req.user;
+        return this.authService.getProfile(req.user); // req.user contains the authenticated use
     }
 
 }

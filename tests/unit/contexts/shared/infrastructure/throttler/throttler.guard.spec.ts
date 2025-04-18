@@ -31,15 +31,15 @@ describe('ThrottlerGuard', () => {
 
     // Mock for Request
     const mockRequest = {
-        url: '/api/test',
+        url: '/api/v1/health',
         method: 'GET',
         headers: {
             'user-agent': 'test-agent',
             'x-forwarded-for': '192.168.1.1',
         },
-        ip: '127.0.0.1',
+        ip: '192.168.1.1',
         connection: {
-            remoteAddress: '127.0.0.1',
+            remoteAddress: '192.168.1.1',
         },
     };
 
@@ -163,6 +163,31 @@ describe('ThrottlerGuard', () => {
         });
     });
 
+    describe('throwThrottlingException', () => {
+        it('should log and throw ThrottlerException with correct message', async () => {
+            // Prepare
+            const request = { ...mockRequest, url: '/api/limit-exceeded' };
+            mockExecutionContext.switchToHttp().getRequest.mockReturnValue(request);
+
+            // Spy on logger
+            const warnSpy = jest.spyOn(loggerService, 'warn');
+
+            // Act
+            try {
+                await expect((guard as any).throwThrottlingException(mockExecutionContext as unknown as ExecutionContext))
+                    .rejects
+                    .toThrow(new ThrottlerException('Too many requests, please try again later.'));
+            } catch (e) {
+                expect(e).toBeInstanceOf(ThrottlerException);
+                expect(e.message).toBe('Too many requests, please try again later.');
+            }
+            // Assert
+            expect(warnSpy).toHaveBeenCalledWith(
+                `Rate limit exceeded - IP: 192.168.1.1, Method: GET, URL: /api/limit-exceeded, User-Agent: test-agent`
+            );
+        });
+    });
+
     describe('shouldSkip', () => {
         it('should skip rate limiting for excluded paths', async () => {
             // Prepare
@@ -170,7 +195,6 @@ describe('ThrottlerGuard', () => {
             mockExecutionContext.switchToHttp().getRequest.mockReturnValue(healthCheckRequest);
 
             // Act
-            // Access the protected method using any
             const result = await (guard as any).shouldSkip(mockExecutionContext as unknown as ExecutionContext);
 
             // Assert
@@ -200,10 +224,9 @@ describe('ThrottlerGuard', () => {
             expect(result).toBe(true);
         });
 
-        /*
         it('should not skip rate limiting for regular API requests', async () => {
             // Prepare
-            const apiRequest = { ...mockRequest, url: '/api/users' };
+            const apiRequest = { ...mockRequest, url: '/api/v1/regular-endpoint' };
             mockExecutionContext.switchToHttp().getRequest.mockReturnValue(apiRequest);
             mockExecutionContext.getType.mockReturnValue('http');
 
@@ -213,7 +236,66 @@ describe('ThrottlerGuard', () => {
             // Assert
             expect(result).toBe(false);
         });
-        */
+
+        // Test for internal network IP addresses
+        it('should handle requests from internal network IPs correctly', async () => {
+            // Prepare
+            const internalRequest = {
+                ...mockRequest,
+                url: '/api/v1/regular-endpoint',
+                headers: {
+                    'x-forwarded-for': '10.0.0.1',
+                    'user-agent': 'test-agent'
+                }
+            };
+            mockExecutionContext.switchToHttp().getRequest.mockReturnValue(internalRequest);
+            mockExecutionContext.getType.mockReturnValue('http');
+
+            // Act
+            const result: boolean = await (guard as any).shouldSkip(mockExecutionContext as unknown as ExecutionContext);
+
+            // Assert - by default should not skip (would need implementation to skip internal IPs)
+            expect(result).toBe(false);
+        });
+
+        // Test for authenticated admin users
+        it('should handle requests from authenticated admin users correctly', async () => {
+            // Prepare
+            const adminRequest = {
+                ...mockRequest,
+                url: '/api/v1/regular-endpoint',
+                user: { role: 'admin' } // Simulating an authenticated admin user
+            };
+            mockExecutionContext.switchToHttp().getRequest.mockReturnValue(adminRequest);
+            mockExecutionContext.getType.mockReturnValue('http');
+
+            // Act
+            const result: boolean = await (guard as any).shouldSkip(mockExecutionContext as unknown as ExecutionContext);
+
+            // Assert - by default should not skip (would need implementation to skip admin users)
+            expect(result).toBe(false);
+        });
+
+        // Test for custom headers
+        it('should handle requests with custom headers correctly', async () => {
+            // Prepare
+            const customHeaderRequest = {
+                ...mockRequest,
+                url: '/api/v1/regular-endpoint',
+                headers: {
+                    'user-agent': 'test-agent',
+                    'x-api-key': 'test-api-key' // Example of a custom header
+                }
+            };
+            mockExecutionContext.switchToHttp().getRequest.mockReturnValue(customHeaderRequest);
+            mockExecutionContext.getType.mockReturnValue('http');
+
+            // Act
+            const result: boolean = await (guard as any).shouldSkip(mockExecutionContext as unknown as ExecutionContext);
+
+            // Assert - by default should not skip (would need implementation to skip based on custom headers)
+            expect(result).toBe(false);
+        });
     });
 
     describe('getRealIp', () => {

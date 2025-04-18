@@ -1,6 +1,6 @@
-import { Injectable, ExecutionContext, Inject } from '@nestjs/common';
-import { ThrottlerGuard as NestThrottlerGuard, ThrottlerException, ThrottlerModuleOptions, ThrottlerStorage } from '@nestjs/throttler';
+import { ExecutionContext, Inject, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ThrottlerGuard as NestThrottlerGuard, ThrottlerException, ThrottlerModuleOptions, ThrottlerStorage } from '@nestjs/throttler';
 import { THROTTLER_OPTIONS } from '@nestjs/throttler/dist/throttler.constants';
 import { AppLoggerService } from '../logger/logger.service';
 import { getRealIp } from '../utils/network.utils';
@@ -8,7 +8,7 @@ import { getRealIp } from '../utils/network.utils';
 @Injectable()
 export class ThrottlerGuard extends NestThrottlerGuard {
     // Paths that should be excluded from rate limiting
-    private readonly skipPaths = ['/api', '/health', '/docs'];
+    private readonly skipPaths = ['/api/v1/health', '/health', '/docs'];
 
     constructor(
         @Inject(THROTTLER_OPTIONS)

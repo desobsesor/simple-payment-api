@@ -5,7 +5,7 @@ export class Transaction {
     constructor(
         public readonly transactionId: number,
         public readonly userId: number,
-        public readonly totalAmount: number,
+        public totalAmount: number,
         public status: 'pending' | 'completed' | 'failed' | 'refunded' | string,
         public readonly items: TransactionItem[],
         public paymentMethod?: PaymentMethod,

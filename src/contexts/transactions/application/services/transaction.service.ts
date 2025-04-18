@@ -1,45 +1,43 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ProductService } from '../../../products/application/services/product.service';
+import { CreatePaymentDto } from '../../../shared/infrastructure/dto/create-payment.dto';
+import { PaymentGatewayService } from '../../../shared/infrastructure/services/payment-gateway.service';
+import { InventoryHistory } from '../../../stocks/domain/entities/inventory-history.entity';
+import { InventoryHistoryRepository } from '../../../stocks/infrastructure/database/repositories/inventory-history.repository';
+import { Transaction } from '../../domain/entities/transaction.entity';
 import { TransactionRepositoryPort } from '../../domain/ports/transaction.repository.port';
 import { CreateTransactionDto } from '../../infrastructure/http-api/dto/create-transaction.dto';
 import { ProcessPaymentDto } from '../../infrastructure/http-api/dto/process-payment.dto';
 import { UpdateStockDto } from '../../infrastructure/http-api/dto/update-stock.dto';
-import { Transaction } from '../../domain/entities/transaction.entity';
-import { WompiService } from '../../../shared/infrastructure/services/wompi.service';
-import { ProductService } from '../../../products/application/services/product.service';
-import { CreatePaymentDto } from '../../../shared/infrastructure/dto/create-payment.dto';
-import { InventoryHistoryRepository } from '../../../stocks/infrastructure/database/repositories/inventory-history.repository';
-import { InventoryHistory } from '../../../stocks/domain/entities/inventory-history.entity';
-import { PaymentMethod } from '../../infrastructure/database/entities/payment-method.orm-entity';
 
 @Injectable()
 export class TransactionService {
     constructor(
         @Inject('TransactionRepositoryPort')
         private readonly transactionRepository: TransactionRepositoryPort,
-        private readonly wompiService: WompiService,
+        private readonly paymentGatewayService: PaymentGatewayService,
         private readonly productService: ProductService,
         @Inject('InventoryHistoryRepositoryPort')
         private readonly inventoryHistoryRepository: InventoryHistoryRepository,
-
+        private readonly eventEmitter: EventEmitter2,
     ) { }
 
     async create(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
         const transaction: Transaction = {
             ...createTransactionDto,
-            totalAmount: createTransactionDto.amount,
             transactionId: 0,
             createdAt: new Date(),
             updatedAt: new Date(),
         } as unknown as Transaction;
-        return this.transactionRepository.create(transaction);
+        const createdTransaction: any = await this.transactionRepository.create(transaction);
+        return createdTransaction;
     }
 
     async processPayment(processPaymentDto: ProcessPaymentDto): Promise<Transaction> {
-        // Validate payment details
         this.validatePaymentData(processPaymentDto);
-        // Create transaction in 'pending' status
-        const transaction = await this.create({
-            amount: processPaymentDto.amount,
+        const transaction: any = await this.create({
+            totalAmount: processPaymentDto.totalAmount || 0,
             paymentMethod: processPaymentDto.paymentMethod,
             status: 'pending',
             items: processPaymentDto.products,
@@ -47,25 +45,31 @@ export class TransactionService {
         })
 
         const createPaymentDto: CreatePaymentDto = {
-            amount: processPaymentDto.amount,
+            totalAmount: processPaymentDto.totalAmount,
             paymentMethod: processPaymentDto.paymentMethod,
-            reference: transaction.transactionId.toString(),
+            reference: transaction?.transactionId?.toString(),
             currency: 'COP',
             description: 'Buy in store',
         }
-        // Integrate with Wompi External API
+        // Integrate with Payment Gateway External API
         try {
-            const wompiResponse = await this.wompiService.createPayment(createPaymentDto);
-            // Update status according to Wompi's response
-            if (wompiResponse.status === 'APPROVED') {
+            const paymentGatewayResponse: any = await this.paymentGatewayService.createPayment(createPaymentDto);
+            // Update status according to gateway response
+            paymentGatewayResponse.status = 'APPROVED';
+            if (paymentGatewayResponse.status === 'APPROVED') {
                 transaction.status = 'completed';
-                await this.transactionRepository.update(transaction);
+                transaction.gatewayReference = paymentGatewayResponse.transactionId;
+                transaction.gatewayDetails = paymentGatewayResponse;
+                const transactionToUpdate = { ...transaction };
+                delete transactionToUpdate.items;
+                await this.transactionRepository.update(transactionToUpdate);
+
                 // Update stock
                 for (const item of processPaymentDto.products) {
-                    await this.productService.updateStock(item.productId, { stock: -item.quantity });
+                    this.updateStock(item.productId, { quantity: item.quantity, movementType: 'out', transactionId: transaction.transactionId });
                 }
             }
-            if (wompiResponse.status === 'DECLINED') {
+            if (paymentGatewayResponse.status === 'DECLINED') {
                 transaction.status = 'failed';
                 await this.transactionRepository.update(transaction);
                 throw new Error('Payment failed');
@@ -86,11 +90,11 @@ export class TransactionService {
     async updateStock(productId: number, updateStockDto: UpdateStockDto) {
         const product: any = await this.productService.findOne(productId);
         const previousStock = product.stock;
-        if (updateStockDto.movementType === 'out') {
+        if (updateStockDto.movementType === 'out' && product.stock > 0) {
             if (product.stock < updateStockDto.quantity) {
                 throw new Error('Not enough stock');
             }
-            product.stock -= updateStockDto.quantity;
+            product.stock = product.stock - updateStockDto.quantity;
         }
 
         if (updateStockDto.movementType === 'in') {
@@ -102,8 +106,7 @@ export class TransactionService {
 
         await this.productService.updateStock(productId, product);
 
-        // Create inventory history record
-        const inventoryHistory: InventoryHistory = {
+        const inventoryHistory: any = {
             movementType: updateStockDto.movementType,
             productId: productId,
             previousStock: previousStock,
@@ -116,35 +119,50 @@ export class TransactionService {
 
         await this.inventoryHistoryRepository.create(inventoryHistory);
 
+        // Emit event for real-time stock update
+        if (this.eventEmitter.emit('product_stock_updated', {
+            productId: product.productId,
+            name: product.name,
+            stock: product.stock
+        })) {
+            console.log('product.stock.updated emitter2', {
+                productId: product.productId,
+                name: product.name,
+                stock: product.stock,
+                previousStock,
+                updatedAt: new Date()
+            });
+        }
+
+
         return product;
     }
 
     private validatePaymentData(processPaymentDto: ProcessPaymentDto) {
-        if (!processPaymentDto.amount || processPaymentDto.amount <= 0) {
+        if (!processPaymentDto.totalAmount || processPaymentDto.totalAmount <= 0) {
             throw new Error('Payment amount must be greater than zero');
         }
         if (!processPaymentDto.paymentMethod) {
             throw new Error('Payment method is required');
         }
 
-        // Payment method specific validations
         if (processPaymentDto.paymentMethod.type === 'CARD') {
-            if (!processPaymentDto.paymentMethod.card) {
+            if (!processPaymentDto.paymentMethod.details.token.cardNumber) {
                 throw new Error('Card data is required for card payments');
             }
-            if (!processPaymentDto.paymentMethod.card.number ||
-                !processPaymentDto.paymentMethod.card.expMonth ||
-                !processPaymentDto.paymentMethod.card.expYear ||
-                !processPaymentDto.paymentMethod.card.cvc) {
+            if (!processPaymentDto.paymentMethod.details.token.cardNumber ||
+                !processPaymentDto.paymentMethod.details.token.expiryMonth ||
+                !processPaymentDto.paymentMethod.details.token.expiryYear ||
+                !processPaymentDto.paymentMethod.details.token.cardholderName) {
                 throw new Error('All card details are required: number, expiration date and CVC');
             }
         }
 
         if (processPaymentDto.paymentMethod.type === 'NEQUI') {
-            if (!processPaymentDto.paymentMethod.phone) {
+            if (!processPaymentDto.paymentMethod.details.token.number) {
                 throw new Error('Phone number is required for Nequi payments');
             }
-            if (!/^3[0-9]{9}$/.test(processPaymentDto.paymentMethod.phone)) {
+            if (!/^3[0-9]{9}$/.test(processPaymentDto.paymentMethod.details.token.number)) {
                 throw new Error('Phone number must be valid for Nequi (10 digits starting with 3)');
             }
         }

@@ -1,9 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import configuration from '../config/configuration';
 import { ProductModule } from '../contexts/products/infrastructure/http-api/product.module';
 import { AuthModule } from '../contexts/shared/infrastructure/auth/auth.module';
+import { LoggerModule } from '../contexts/shared/infrastructure/logger/logger.module';
+import { AppLoggerService } from '../contexts/shared/infrastructure/logger/logger.service';
+import { WebsocketsModule } from '../contexts/shared/infrastructure/websockets/websockets.module';
 import { InventoryHistoryModule } from '../contexts/stocks/infrastructure/http-api/inventory-history.module';
 import { TransactionModule } from '../contexts/transactions/infrastructure/http-api/transaction.module';
 import { UserModule } from '../contexts/users/infrastructure/http-api/user.module';
@@ -34,9 +38,11 @@ import { AppService } from './app.service';
     AuthModule,
     ProductModule,
     TransactionModule,
-    InventoryHistoryModule
+    InventoryHistoryModule,
+    WebsocketsModule,
+    LoggerModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AppLoggerService, EventEmitter2],
 })
 export class AppModule { }

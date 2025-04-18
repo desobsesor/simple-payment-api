@@ -2,7 +2,6 @@ import { Body, Controller, Get, HttpStatus, Param, Put, UseGuards } from '@nestj
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProductService } from '../../application/services/product.service';
 import { Product } from '../../domain/models/product.entity';
-import { LocalAuthGuard } from '../../../shared/infrastructure/auth/guards/local-auth.guard';
 
 @ApiTags('Products')
 @Controller('v1/products')
@@ -10,13 +9,13 @@ export class ProductController {
     constructor(private readonly productService: ProductService) { }
 
     @Get()
-    //@UseGuards(LocalAuthGuard)
     @ApiOperation({
         summary: 'Get all products',
         description: 'Requires authentication with valid credentials'
     })
     @ApiResponse({ status: HttpStatus.OK, description: 'Product list retrieved successfully', type: [Product] })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized access' })
+    @UseGuards()
     async findAll(): Promise<Product[]> {
         return this.productService.findAll();
     }
