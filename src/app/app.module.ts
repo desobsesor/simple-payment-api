@@ -5,11 +5,13 @@ import configuration from '../config/configuration';
 import { ProductModule } from '../contexts/products/infrastructure/http-api/product.module';
 import { AuthModule } from '../contexts/shared/infrastructure/auth/auth.module';
 import { AppLoggerService } from '../contexts/shared/infrastructure/logger/logger.service';
+import { WebsocketsModule } from '../contexts/shared/infrastructure/websockets/websockets.module';
 import { InventoryHistoryModule } from '../contexts/stocks/infrastructure/http-api/inventory-history.module';
 import { TransactionModule } from '../contexts/transactions/infrastructure/http-api/transaction.module';
 import { UserModule } from '../contexts/users/infrastructure/http-api/user.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { LoggerModule } from '../contexts/shared/infrastructure/logger/logger.module';
 
 @Module({
   imports: [
@@ -35,7 +37,9 @@ import { AppService } from './app.service';
     AuthModule,
     ProductModule,
     TransactionModule,
-    InventoryHistoryModule
+    InventoryHistoryModule,
+    WebsocketsModule,
+    LoggerModule
   ],
   controllers: [AppController],
   providers: [AppService, AppLoggerService],

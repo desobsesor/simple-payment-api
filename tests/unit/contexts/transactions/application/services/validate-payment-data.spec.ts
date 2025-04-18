@@ -1,17 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductService } from '../../../../../../src/contexts/products/application/services/product.service';
-import { WompiService } from '../../../../../../src/contexts/shared/infrastructure/services/wompi.service';
+import { PaymentGatewayService } from '../../../../../../src/contexts/shared/infrastructure/services/payment-gateway.service';
 import { InventoryHistoryRepository } from '../../../../../../src/contexts/stocks/infrastructure/database/repositories/inventory-history.repository';
 import { TransactionService } from '../../../../../../src/contexts/transactions/application/services/transaction.service';
 import { TransactionRepositoryPort } from '../../../../../../src/contexts/transactions/domain/ports/transaction.repository.port';
 import { ProcessPaymentDto } from '../../../../../../src/contexts/transactions/infrastructure/http-api/dto/process-payment.dto';
+import { AppLoggerService } from '../../../../../../src/contexts/shared/infrastructure/logger/logger.service';
+import { Server } from 'socket.io';
 
 describe('TransactionService - validatePaymentData', () => {
     let service: TransactionService;
     let transactionRepositoryMock: Partial<TransactionRepositoryPort>;
-    let wompiServiceMock: Partial<WompiService>;
+    let paymentGatewayServiceMock: Partial<PaymentGatewayService>;
     let productServiceMock: Partial<ProductService>;
     let inventoryHistoryRepositoryMock: Partial<InventoryHistoryRepository>;
+    let appLoggerServiceMock: Partial<AppLoggerService>;
+    let serverMock: Partial<Server>;
 
     beforeEach(async () => {
         // Create mocks for dependencies
@@ -21,7 +25,7 @@ describe('TransactionService - validatePaymentData', () => {
             update: jest.fn(),
         };
 
-        wompiServiceMock = {
+        paymentGatewayServiceMock = {
             createPayment: jest.fn(),
         };
 
@@ -34,6 +38,18 @@ describe('TransactionService - validatePaymentData', () => {
             create: jest.fn(),
         };
 
+        appLoggerServiceMock = {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+            debug: jest.fn(),
+            verbose: jest.fn(),
+        };
+
+        serverMock = {
+            emit: jest.fn().mockReturnValue(true),
+        };
+
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 TransactionService,
@@ -42,8 +58,8 @@ describe('TransactionService - validatePaymentData', () => {
                     useValue: transactionRepositoryMock,
                 },
                 {
-                    provide: WompiService,
-                    useValue: wompiServiceMock,
+                    provide: PaymentGatewayService,
+                    useValue: paymentGatewayServiceMock,
                 },
                 {
                     provide: ProductService,
@@ -53,19 +69,27 @@ describe('TransactionService - validatePaymentData', () => {
                     provide: 'InventoryHistoryRepositoryPort',
                     useValue: inventoryHistoryRepositoryMock,
                 },
+                {
+                    provide: AppLoggerService,
+                    useValue: appLoggerServiceMock,
+                },
+                {
+                    provide: Server,
+                    useValue: serverMock,
+                },
             ],
         }).compile();
 
         service = module.get<TransactionService>(TransactionService);
     });
 
-    // Test to validate that amount must be greater than zero
+    // Test to validate that totalAmount must be greater than zero
     describe('Amount validation', () => {
-        it('should throw error if amount is zero', () => {
+        it('should throw error if totalAmount is zero', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: 0,
+                totalAmount: 0,
                 paymentMethod: {
                     type: 'CARD',
                     details: {
@@ -88,11 +112,11 @@ describe('TransactionService - validatePaymentData', () => {
             }).toThrow('Payment amount must be greater than zero');
         });
 
-        it('should throw error if amount is negative', () => {
+        it('should throw error if totalAmount is negative', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: -100,
+                totalAmount: -100,
                 paymentMethod: {
                     type: 'CARD',
                     details: {
@@ -122,7 +146,7 @@ describe('TransactionService - validatePaymentData', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: null,
                 products: [{ productId: 1, quantity: 2, unitPrice: 50 }],
                 userId: 1,
@@ -142,7 +166,7 @@ describe('TransactionService - validatePaymentData', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: {
                     type: 'CARD',
                     details: {
@@ -169,7 +193,7 @@ describe('TransactionService - validatePaymentData', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: {
                     type: 'CARD',
                     details: {
@@ -196,7 +220,7 @@ describe('TransactionService - validatePaymentData', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: {
                     type: 'CARD',
                     details: {
@@ -223,7 +247,7 @@ describe('TransactionService - validatePaymentData', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: {
                     type: 'CARD',
                     details: {
@@ -253,7 +277,7 @@ describe('TransactionService - validatePaymentData', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'NEQUI',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: {
                     type: 'NEQUI',
                     details: {
@@ -277,7 +301,7 @@ describe('TransactionService - validatePaymentData', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'NEQUI',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: {
                     type: 'NEQUI',
                     details: {
@@ -301,7 +325,7 @@ describe('TransactionService - validatePaymentData', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'NEQUI',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: {
                     type: 'NEQUI',
                     details: {
@@ -328,7 +352,7 @@ describe('TransactionService - validatePaymentData', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: {
                     type: 'CARD',
                     details: {
@@ -355,7 +379,7 @@ describe('TransactionService - validatePaymentData', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: {
                     type: 'CARD',
                     details: {
@@ -385,7 +409,7 @@ describe('TransactionService - validatePaymentData', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: {
                     type: 'CARD',
                     details: {
@@ -412,7 +436,7 @@ describe('TransactionService - validatePaymentData', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'NEQUI',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: {
                     type: 'NEQUI',
                     details: {

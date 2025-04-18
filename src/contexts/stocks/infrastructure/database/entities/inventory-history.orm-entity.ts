@@ -11,10 +11,10 @@ export class InventoryHistory {
     @JoinColumn({ name: 'product_id' })
     product: Product;
 
-    @Column({ name: 'previous_stock' })
+    @Column({ name: 'previous_stock', default: 0 })
     previousStock: number;
 
-    @Column({ name: 'new_stock' })
+    @Column({ name: 'new_stock', default: 0 })
     newStock: number;
 
     @Column()

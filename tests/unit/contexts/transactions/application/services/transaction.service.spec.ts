@@ -1,20 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TransactionService } from '../../../../../../src/contexts/transactions/application/services/transaction.service';
 import { TransactionRepositoryPort } from '../../../../../../src/contexts/transactions/domain/ports/transaction.repository.port';
-import { WompiService } from '../../../../../../src/contexts/shared/infrastructure/services/wompi.service';
+import { PaymentGatewayService } from '../../../../../../src/contexts/shared/infrastructure/services/payment-gateway.service';
 import { ProductService } from '../../../../../../src/contexts/products/application/services/product.service';
 import { InventoryHistoryRepository } from '../../../../../../src/contexts/stocks/infrastructure/database/repositories/inventory-history.repository';
 import { ProcessPaymentDto } from '../../../../../../src/contexts/transactions/infrastructure/http-api/dto/process-payment.dto';
 import { CreatePaymentDto } from '../../../../../../src/contexts/shared/infrastructure/dto/create-payment.dto';
-import { PaymentStatus } from '../../../../../../src/contexts/shared/infrastructure/services/wompi.service';
+import { PaymentStatus } from '../../../../../../src/contexts/shared/infrastructure/services/payment-gateway.service';
 import { UpdateStockDto } from '../../../../../../src/contexts/transactions/infrastructure/http-api/dto/update-stock.dto';
+import { AppLoggerService } from '../../../../../../src/contexts/shared/infrastructure/logger/logger.service';
+import { Server } from 'socket.io';
 
 describe('TransactionService', () => {
     let service: TransactionService;
     let transactionRepositoryMock: Partial<TransactionRepositoryPort>;
-    let wompiServiceMock: Partial<WompiService>;
+    let paymentGatewayServiceMock: Partial<PaymentGatewayService>;
     let productServiceMock: Partial<ProductService>;
+    let appLoggerServiceMock: Partial<AppLoggerService>;
     let inventoryHistoryRepositoryMock: Partial<InventoryHistoryRepository>;
+    let serverMock: Partial<Server>;
 
     beforeEach(async () => {
         // Crear mocks para las dependencias
@@ -24,7 +28,7 @@ describe('TransactionService', () => {
             update: jest.fn(),
         };
 
-        wompiServiceMock = {
+        paymentGatewayServiceMock = {
             createPayment: jest.fn(),
         };
 
@@ -33,8 +37,20 @@ describe('TransactionService', () => {
             updateStock: jest.fn(),
         };
 
+        appLoggerServiceMock = {
+            log: jest.fn(),
+            error: jest.fn(),
+            warn: jest.fn(),
+            debug: jest.fn(),
+            verbose: jest.fn(),
+        };
+
         inventoryHistoryRepositoryMock = {
             create: jest.fn(),
+        };
+
+        serverMock = {
+            emit: jest.fn().mockReturnValue(true),
         };
 
         const module: TestingModule = await Test.createTestingModule({
@@ -45,16 +61,24 @@ describe('TransactionService', () => {
                     useValue: transactionRepositoryMock,
                 },
                 {
-                    provide: WompiService,
-                    useValue: wompiServiceMock,
+                    provide: PaymentGatewayService,
+                    useValue: paymentGatewayServiceMock,
                 },
                 {
                     provide: ProductService,
                     useValue: productServiceMock,
                 },
                 {
+                    provide: AppLoggerService,
+                    useValue: appLoggerServiceMock,
+                },
+                {
                     provide: 'InventoryHistoryRepositoryPort',
                     useValue: inventoryHistoryRepositoryMock,
+                },
+                {
+                    provide: Server,
+                    useValue: serverMock,
                 },
             ],
         }).compile();
@@ -70,7 +94,7 @@ describe('TransactionService', () => {
         it('should create a transaction', async () => {
             // Arrange
             const createTransactionDto = {
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: { type: 'CARD' },
                 status: 'pending',
                 items: [{ productId: 1, quantity: 2, unitPrice: 50 }],
@@ -92,12 +116,11 @@ describe('TransactionService', () => {
 
             // Assert
             expect(transactionRepositoryMock.create).toHaveBeenCalledWith(expect.objectContaining({
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: { type: 'CARD' },
                 status: 'pending',
                 items: [{ productId: 1, quantity: 2, unitPrice: 50 }],
                 userId: 1,
-                totalAmount: 100,
             }));
             expect(result).toEqual(expectedTransaction);
         });
@@ -108,7 +131,7 @@ describe('TransactionService', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: {
                     type: 'CARD',
                     details: {
@@ -127,7 +150,7 @@ describe('TransactionService', () => {
             const createdTransaction = {
                 transactionId: 123,
                 status: 'pending',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: { type: 'CARD' },
                 items: [{ productId: 1, quantity: 2, unitPrice: 50 }],
                 userId: 1,
@@ -146,7 +169,7 @@ describe('TransactionService', () => {
             };
 
             (transactionRepositoryMock.create as jest.Mock).mockResolvedValue(createdTransaction);
-            (wompiServiceMock.createPayment as jest.Mock).mockResolvedValue(wompiResponse);
+            (paymentGatewayServiceMock.createPayment as jest.Mock).mockResolvedValue(wompiResponse);
             (transactionRepositoryMock.update as jest.Mock).mockResolvedValue(updatedTransaction);
             (productServiceMock.updateStock as jest.Mock).mockResolvedValue({});
 
@@ -155,8 +178,8 @@ describe('TransactionService', () => {
 
             // Assert
             expect(transactionRepositoryMock.create).toHaveBeenCalled();
-            expect(wompiServiceMock.createPayment).toHaveBeenCalledWith(expect.objectContaining({
-                "amount": 100,
+            expect(paymentGatewayServiceMock.createPayment).toHaveBeenCalledWith(expect.objectContaining({
+                "totalAmount": 100,
                 "currency": "COP",
                 "description": "Buy in store",
                 "paymentMethod": {
@@ -180,7 +203,7 @@ describe('TransactionService', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: { type: 'card' },
                 products: [{ productId: 1, quantity: 2, unitPrice: 50 }],
                 userId: 1,
@@ -189,7 +212,7 @@ describe('TransactionService', () => {
             const createdTransaction = {
                 transactionId: 123,
                 status: 'pending',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: { type: 'CARD' },
                 items: [{ productId: 1, quantity: 2, unitPrice: 50 }],
                 userId: 1,
@@ -208,7 +231,7 @@ describe('TransactionService', () => {
             };
 
             (transactionRepositoryMock.create as jest.Mock).mockResolvedValue(createdTransaction);
-            (wompiServiceMock.createPayment as jest.Mock).mockResolvedValue(wompiResponse);
+            (paymentGatewayServiceMock.createPayment as jest.Mock).mockResolvedValue(wompiResponse);
             (transactionRepositoryMock.update as jest.Mock).mockResolvedValue(updatedTransaction);
 
             // Act & Assert
@@ -218,7 +241,7 @@ describe('TransactionService', () => {
                 //expect(Promise.resolve(error.message)).toBe({});
             }
             expect(transactionRepositoryMock.create).toHaveBeenCalled();
-            expect(wompiServiceMock.createPayment).toHaveBeenCalled();
+            expect(paymentGatewayServiceMock.createPayment).toHaveBeenCalled();
             //expect(transactionRepositoryMock.update).toHaveBeenCalled();
             expect(productServiceMock.updateStock).not.toHaveBeenCalled();
         });
@@ -336,7 +359,7 @@ describe('TransactionService', () => {
             const transactionId = 1;
             const expectedTransaction = {
                 transactionId: 1,
-                amount: 100,
+                totalAmount: 100,
                 status: 'completed',
             };
 
@@ -364,7 +387,7 @@ describe('TransactionService', () => {
                     },
                 },
                 products: [{ productId: 1, quantity: 1, unitPrice: 100 }],
-                amount: 100,
+                totalAmount: 100,
                 userId: 1,
                 type: 'PSE',
             };

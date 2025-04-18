@@ -42,10 +42,10 @@ class ProductItem {
 
 @ApiTags('ProcessPaymentDto')
 export class ProcessPaymentDto {
-    @ApiProperty({ description: 'amount', example: 100 })
+    @ApiProperty({ description: 'total_amount', example: 100 })
     @IsNumber()
     @IsPositive()
-    amount: number;
+    totalAmount: number;
 
     @ApiProperty({ description: 'type', example: 'CARD' })
     @IsString()

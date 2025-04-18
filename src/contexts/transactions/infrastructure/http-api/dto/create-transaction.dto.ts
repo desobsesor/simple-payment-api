@@ -46,7 +46,7 @@ export class CreateTransactionDto {
 
     @ApiProperty({ description: 'Transaction amount', example: 10 })
     @IsNumber()
-    amount: number;
+    totalAmount: number;
 
     @ApiProperty({ description: 'Transaction status', example: 'pending' })
     @IsString()

@@ -16,7 +16,7 @@ export class Transaction {
     @JoinColumn({ name: 'payment_method_id' })
     paymentMethod: PaymentMethod;
 
-    @Column({ name: 'total_amount', type: 'decimal', precision: 10, scale: 2 })
+    @Column({ name: 'total_amount', type: 'decimal', precision: 10, scale: 2, default: 0 })
     totalAmount: number;
 
     @Column({ type: 'varchar', length: 20 })

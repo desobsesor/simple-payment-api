@@ -1,13 +1,13 @@
 import { CreatePaymentDto } from '../../../../../../src/contexts/shared/infrastructure/dto/create-payment.dto';
-import { PaymentStatus, WompiService } from '../../../../../../src/contexts/shared/infrastructure/services/wompi.service';
+import { PaymentStatus, PaymentGatewayService } from '../../../../../../src/contexts/shared/infrastructure/services/payment-gateway.service';
 
-describe('WompiService', () => {
-    let service: WompiService;
+describe('PaymentGatewayService', () => {
+    let service: PaymentGatewayService;
     let originalRandom: () => number;
     let originalSetTimeout: typeof setTimeout;
 
     beforeEach(() => {
-        service = new WompiService();
+        service = new PaymentGatewayService();
         originalRandom = Math.random;
         originalSetTimeout = global.setTimeout;
     });

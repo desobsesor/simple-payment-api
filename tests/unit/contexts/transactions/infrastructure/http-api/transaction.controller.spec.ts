@@ -38,7 +38,7 @@ describe('TransactionController', () => {
         it('should create a transaction', async () => {
             // Arrange
             const createTransactionDto: CreateTransactionDto = {
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: { type: 'CARD' },
                 status: 'pending',
                 items: [{ productId: 1, quantity: 2, unitPrice: 50 }],
@@ -47,7 +47,7 @@ describe('TransactionController', () => {
 
             const expectedResult = {
                 transactionId: 1,
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: { type: 'CARD' },
                 status: 'pending',
                 items: [{ productId: 1, quantity: 2, unitPrice: 50 }],
@@ -72,7 +72,7 @@ describe('TransactionController', () => {
             // Arrange
             const processPaymentDto: ProcessPaymentDto = {
                 type: 'CARD',
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: { type: 'CARD' },
                 products: [{ productId: 1, quantity: 2, unitPrice: 50 }],
                 userId: 1,
@@ -80,7 +80,7 @@ describe('TransactionController', () => {
 
             const expectedResult = {
                 transactionId: 1,
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: { type: 'CARD' },
                 status: 'completed',
                 items: [{ productId: 1, quantity: 2, unitPrice: 50 }],
@@ -106,7 +106,7 @@ describe('TransactionController', () => {
             const transactionId = '1';
             const expectedResult = {
                 transactionId: 1,
-                amount: 100,
+                totalAmount: 100,
                 paymentMethod: { type: 'CARD' },
                 status: 'completed',
                 items: [{ productId: 1, quantity: 2, unitPrice: 50 }],

@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Transaction } from '../entities/transaction.orm-entity';
-import { TransactionRepositoryPort } from '../../../domain/ports/transaction.repository.port';
+import { Product } from '../../../../products/domain/models/product.entity';
+import { User } from '../../../../users/domain/models/user.entity';
 import { Transaction as DomainTransaction } from '../../../domain/entities/transaction.entity';
+import { TransactionRepositoryPort } from '../../../domain/ports/transaction.repository.port';
 import { PaymentMethod } from '../entities/payment-method.orm-entity';
 import { TransactionItem } from '../entities/transaction-item.orm-entity';
-import { User } from '../../../../users/domain/models/user.entity';
-import { Product } from '../../../../products/domain/models/product.entity';
+import { Transaction } from '../entities/transaction.orm-entity';
 
 @Injectable()
 export class TransactionRepository implements TransactionRepositoryPort {
@@ -25,15 +25,28 @@ export class TransactionRepository implements TransactionRepositoryPort {
     ) { }
 
     async create(transaction: DomainTransaction | any): Promise<DomainTransaction> {
+        if (!transaction.items || transaction.items.length === 0) {
+            throw new Error('Transaction must have at least one item');
+        }
+
         const productId = transaction.items[0].productId;
         const ormTransaction = await this.toOrm(transaction);
         const savedTransaction = await this.transactionRepository.save(ormTransaction);
-        const transaction_ = await this.transactionRepository.findOneBy({ transactionId: savedTransaction.transactionId }) as Transaction;
-        const product_ = await this.productRepository.findOneBy({ productId }) as Product;
 
-        // Save payment method if exists
+        const [product_, transaction_] = await Promise.all([
+            this.productRepository.findOneBy({ productId }),
+            this.transactionRepository.findOneBy({ transactionId: savedTransaction?.transactionId })
+        ]);
+
+        if (!transaction_) {
+            throw new Error('Transaction is null. Cannot proceed with creating TransactionItems.');
+        }
+
+        if (!product_) {
+            throw new Error(`Product with ID ${productId} not found. Cannot create TransactionItems.`);
+        }
+
         if (transaction.paymentMethod) {
-            // Verify if the payment method already exists for the user
             const existingPaymentMethod = await this.paymentMethodRepository.findOne({
                 where: {
                     user: { userId: transaction.userId },
@@ -42,43 +55,40 @@ export class TransactionRepository implements TransactionRepositoryPort {
             });
 
             if (existingPaymentMethod) {
-                // If the payment method already exists, assign it to the transaction
                 transaction_.paymentMethod = existingPaymentMethod;
             } else {
-                // If the payment method doesn't exist, create a new one
+                const user = await this.userRepository.findOneBy({ userId: transaction.userId });
+
+                if (!user) {
+                    throw new Error(`User with ID ${transaction.userId} not found. Cannot create PaymentMethod.`);
+                }
+
                 const paymentMethod = this.paymentMethodRepository.create({
                     ...transaction.paymentMethod,
-                    user: await this.userRepository.findOneBy({ userId: transaction.userId }) as any
+                    user: user
                 });
-                const savedPaymentMethod: any = await this.paymentMethodRepository.save(paymentMethod);
-                // Assign the saved payment method to the transaction
-                transaction_.paymentMethod = savedPaymentMethod;
+                const savedPaymentMethod = await this.paymentMethodRepository.save(paymentMethod);
+                transaction_.paymentMethod = [...savedPaymentMethod] as any as PaymentMethod;
             }
 
-            // Save the transaction with the payment method
             await this.transactionRepository.save(transaction_);
         }
 
-        // Save transaction items
+        const itemsToCreate: TransactionItem[] = [];
         if (transaction.items && transaction.items.length > 0) {
-            // an array of TransactionItem objects is created
-            const itemsToCreate = [];
-
             for (const item of transaction.items) {
-                const transactionItem = this.transactionItemRepository.create({
+                const transactionItem: any = {
                     transaction: transaction_,
                     product: product_,
-                    quantity: item.quantity || 1, // Use item.quantity if it exists, else use 1 as default value
+                    quantity: item.quantity || 1,
                     unitPrice: item.unitPrice
-                } as unknown as TransactionItem);
+                };
                 itemsToCreate.push(transactionItem);
             }
-
-            // all items are saved in a single transaction
-            await this.transactionItemRepository.save(itemsToCreate);
         }
 
-        return this.toDomain(savedTransaction);
+        const savedItems = await this.transactionItemRepository.save(itemsToCreate);
+        return this.toDomain({ ...savedTransaction, items: [...savedItems] as any as TransactionItem[] });
     }
 
     async findById(transactionId: number): Promise<DomainTransaction> {
@@ -90,13 +100,12 @@ export class TransactionRepository implements TransactionRepositoryPort {
     }
 
     async update(transaction: DomainTransaction): Promise<DomainTransaction> {
-        const ormTransaction: any = this.toOrm(transaction);
+        const ormTransaction: any = await this.toOrm(transaction);
         const updatedTransaction: any = await this.transactionRepository.save(ormTransaction);
         return this.toDomain(updatedTransaction);
     }
 
     private toDomain(ormTransaction: Transaction): DomainTransaction {
-        // Implement mapping from ORM to domain
         if (!ormTransaction) {
             return null;
         }
