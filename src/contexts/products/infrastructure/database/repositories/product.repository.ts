@@ -15,7 +15,10 @@ export class ProductRepository implements IProductRepository {
         try {
             return await this.repo.find({
                 select: ['productId', 'name', 'price', 'description', 'imageUrl', 'sku', 'category', 'stock'],
-                cache: false
+                cache: false,
+                order: {
+                    productId: 'ASC',
+                }
             });
         } catch (error) {
             throw new Error(`Error finding all products: ${error.message}`);
@@ -36,7 +39,12 @@ export class ProductRepository implements IProductRepository {
 
     async updateStock(productId: number, product: Partial<Omit<Product, 'productId' | 'createdAt' | 'updatedAt'>>): Promise<Product | null> {
         try {
-            await this.repo.update(productId, product);
+            const existingProduct: Product = await this.repo.findOne({ where: { productId } });
+            if (!existingProduct) {
+                return null;
+            }
+
+            await this.repo.save(product);
             return await this.repo.findOne({ where: { productId } });
         } catch (error) {
             throw new Error(`Error updating product: ${error.message}`);

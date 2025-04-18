@@ -9,8 +9,11 @@ export enum PaymentStatus {
     ERROR = 'ERROR'
 }
 
+/**
+ * Simulates the payment gateway service. (Wompi, Paypal, etc.
+ */
 @Injectable()
-export class WompiService {
+export class PaymentGatewayService {
     private readonly mockResponses: Record<string, PaymentResponse> = {
         'APPROVED': {
             status: PaymentStatus.APPROVED,

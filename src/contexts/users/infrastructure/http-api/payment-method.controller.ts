@@ -10,7 +10,7 @@ export class PaymentMethodController {
     constructor(private readonly userService: UserService) { }
 
     @Get('user/:userId')
-    @UseGuards(LocalAuthGuard)
+    @UseGuards()
     @ApiOperation({
         summary: 'Get all payment methods for a user',
         description: 'Requires authentication with valid credentials'
