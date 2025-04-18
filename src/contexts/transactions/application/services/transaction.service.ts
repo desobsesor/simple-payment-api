@@ -10,9 +10,6 @@ import { TransactionRepositoryPort } from '../../domain/ports/transaction.reposi
 import { CreateTransactionDto } from '../../infrastructure/http-api/dto/create-transaction.dto';
 import { ProcessPaymentDto } from '../../infrastructure/http-api/dto/process-payment.dto';
 import { UpdateStockDto } from '../../infrastructure/http-api/dto/update-stock.dto';
-import { AppLoggerService } from '../../../../../src/contexts/shared/infrastructure/logger/logger.service';
-
-import { Server, Socket } from 'socket.io';
 
 @Injectable()
 export class TransactionService {
@@ -23,9 +20,7 @@ export class TransactionService {
         private readonly productService: ProductService,
         @Inject('InventoryHistoryRepositoryPort')
         private readonly inventoryHistoryRepository: InventoryHistoryRepository,
-        //private readonly eventEmitter: EventEmitter2,
-        private readonly logger: AppLoggerService,
-        private readonly server: Server,
+        private readonly eventEmitter: EventEmitter2,
     ) { }
 
     async create(createTransactionDto: CreateTransactionDto): Promise<Transaction> {
@@ -125,24 +120,18 @@ export class TransactionService {
         await this.inventoryHistoryRepository.create(inventoryHistory);
 
         // Emit event for real-time stock update
-        /*this.eventEmitter.emit('product_stock_updated', {
+        if (this.eventEmitter.emit('product_stock_updated', {
             productId: product.productId,
             name: product.name,
-            stock: product.stock,
-            previousStock,
-            updatedAt: new Date()
-        });*/
-
-
-        if (this.server.emit('product_stock_updated', { productId: 0, stock: 0 })) {
-            console.log('product.stock.updated emitter', {
+            stock: product.stock
+        })) {
+            console.log('product.stock.updated emitter2', {
                 productId: product.productId,
                 name: product.name,
                 stock: product.stock,
                 previousStock,
                 updatedAt: new Date()
             });
-
         }
 
 

@@ -1,5 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Product } from '../../../products/infrastructure/database/entities/product.orm-entity';
 import { ProductModule } from '../../../products/infrastructure/http-api/product.module';
@@ -16,8 +15,8 @@ import { Transaction } from '../database/entities/transaction.orm-entity';
 import { TransactionRepository } from '../database/repositories/transaction.repository';
 import { TransactionController } from './transaction.controller';
 import { AppLoggerService } from '../../../../../src/contexts/shared/infrastructure/logger/logger.service';
-import { Server } from 'socket.io';
 import { LoggerModule } from '../../../../../src/contexts/shared/infrastructure/logger/logger.module';
+import { WebsocketsModule } from '@/src/contexts/shared/infrastructure/websockets/websockets.module';
 
 @Module({
     imports: [
@@ -29,10 +28,11 @@ import { LoggerModule } from '../../../../../src/contexts/shared/infrastructure/
             Product,
             InventoryHistory
         ]),
-        forwardRef(() => ProductModule),
-        forwardRef(() => UserModule),
-        forwardRef(() => InventoryHistoryModule), ,
-        forwardRef(() => LoggerModule)
+        ProductModule,
+        UserModule,
+        forwardRef(() => InventoryHistoryModule),
+        LoggerModule,
+        WebsocketsModule
     ],
     controllers: [TransactionController],
     providers: [
@@ -46,8 +46,7 @@ import { LoggerModule } from '../../../../../src/contexts/shared/infrastructure/
             provide: 'InventoryHistoryRepositoryPort',
             useClass: InventoryHistoryRepository,
         },
-        AppLoggerService,
-        Server
+        AppLoggerService
     ],
     exports: [TransactionService, AppLoggerService],
 })

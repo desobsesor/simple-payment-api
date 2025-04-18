@@ -15,7 +15,10 @@ export class ProductRepository implements IProductRepository {
         try {
             return await this.repo.find({
                 select: ['productId', 'name', 'price', 'description', 'imageUrl', 'sku', 'category', 'stock'],
-                cache: false
+                cache: false,
+                order: {
+                    productId: 'ASC',
+                }
             });
         } catch (error) {
             throw new Error(`Error finding all products: ${error.message}`);
