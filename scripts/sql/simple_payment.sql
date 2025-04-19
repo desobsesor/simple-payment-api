@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS inventory_history;
 DROP TABLE IF EXISTS transaction_items;
 DROP TABLE IF EXISTS transactions;
 DROP TABLE IF EXISTS payment_methods;
+DROP TABLE IF EXISTS offer_products;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS users;
 
@@ -38,6 +39,21 @@ CREATE TABLE products (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Offer products table
+CREATE TABLE offer_products (
+    offer_id SERIAL PRIMARY KEY,
+    product_id INT REFERENCES products(product_id),
+    discount_percentage DECIMAL(5,2) NOT NULL,
+    discount_amount DECIMAL(10,2),
+    start_date TIMESTAMP NOT NULL,
+    end_date TIMESTAMP NOT NULL,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
 -- Payment methods table
 CREATE TABLE payment_methods (
     payment_method_id SERIAL PRIMARY KEY,
@@ -68,6 +84,9 @@ CREATE TABLE transaction_items (
     product_id INT REFERENCES products(product_id),
     quantity INT NOT NULL,
     unit_price DECIMAL(10,2) NOT NULL,
+    original_price DECIMAL(10,2),
+    discount_applied DECIMAL(10,2) DEFAULT 0,
+    offer_id INT REFERENCES offer_products(offer_id),
     subtotal DECIMAL(10,2) GENERATED ALWAYS AS (quantity * unit_price) STORED
 );
 
@@ -128,9 +147,13 @@ EXECUTE FUNCTION update_inventory();
 CREATE INDEX idx_transactions_user ON transactions(user_id);
 CREATE INDEX idx_transactions_status ON transactions(status);
 CREATE INDEX idx_transaction_items_product ON transaction_items(product_id);
+CREATE INDEX idx_transaction_items_offer ON transaction_items(offer_id);
+CREATE INDEX idx_offer_products_product ON offer_products(product_id);
+CREATE INDEX idx_offer_products_dates ON offer_products(start_date, end_date);
 CREATE INDEX idx_inventory_history_product ON inventory_history(product_id);
 
 -- Sample data
+
 INSERT INTO users (fullname, username, password, email, address, phone, roles) VALUES
     ('Yovany Suárez Silva','yosuarezs','$2b$10$/o3Yb4Q3Ag5RjCo78UoR6elVTh77WzhcAM7oY0Qeq6lgpQra/k1BW', 'yovanysuarezsilva@example.com', 'Calle Sinai, Timaná, Huila', '5551234567','{customer,admin}'),
     ('Selena Suárez Medina', 'sesuarezm','$2b$10$/o3Yb4Q3Ag5RjCo78UoR6elVTh77WzhcAM7oY0Qeq6lgpQra/k1BW', 'selenasuarezmedina@example.com', 'Avenida Santa Lucia, Timaná, Huila', '5557654321','{customer}');
@@ -149,6 +172,21 @@ INSERT INTO products (name, description, image_url, sku, price, stock, category)
     ('Oranges', 'Sweet citrus fruit rich in vitamin C, grown in temperate and subtropical climates', 'farming/naranjas-min.jpg', 'NR6497G5W1', 2000.00, 100,'Farming'),
     ('Tomatoes', 'Versatile fruit rich in lycopene, used as a base in sauces, salads, and various dishes', 'farming/tomates-min.jpg', 'TM3256E8U7', 1700.00, 100,'Farming'),
     ('Cassava', 'Tropical tuber with high caloric content, a staple food in many regions due to its culinary versatility', 'farming/yuca-min.jpg', 'YC9183O4I2', 1400.00, 100,'Farming');
+
+INSERT INTO offer_products (
+    product_id,
+    discount_percentage,
+    discount_amount,
+    start_date,
+    end_date,
+    description,
+    is_active
+) VALUES 
+(1, 15.00, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '30 days', 'Summer sale - 15% off', TRUE),
+(2, 20.00, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '15 days', 'Flash sale - 20% discount', TRUE),
+(3, 10.00, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '7 days', 'Weekly special - 10% off', TRUE),
+(4, 50.00, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '60 days', 'Fixed $50 discount', TRUE),
+(5, 25.00, NULL, CURRENT_TIMESTAMP + INTERVAL '7 days', CURRENT_TIMESTAMP + INTERVAL '37 days', 'Future promotion - 25% off', TRUE);
 
 INSERT INTO payment_methods (user_id, type, details, is_default) VALUES
     (1, 'card', '{"type": "debit", "brand": "visa", "token": {"expiryYear": "26", "expiryMonth": "11", "cardholderName": "Yovany Suárez Silva"}, "lastFour": "5432", "cardNumber":"1234567898765432"}', TRUE),

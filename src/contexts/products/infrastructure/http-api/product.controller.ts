@@ -2,11 +2,15 @@ import { Body, Controller, Get, HttpStatus, Param, Put, UseGuards } from '@nestj
 import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ProductService } from '../../application/services/product.service';
 import { Product } from '../../domain/models/product.entity';
+import { OfferProductService } from '../../application/services/offer-product.service';
 
 @ApiTags('Products')
 @Controller('v1/products')
 export class ProductController {
-    constructor(private readonly productService: ProductService) { }
+    constructor(
+        private readonly productService: ProductService,
+        private readonly offerProductService: OfferProductService
+    ) { }
 
     @Get()
     @ApiOperation({
@@ -17,7 +21,14 @@ export class ProductController {
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized access' })
     @UseGuards()
     async findAll(): Promise<Product[]> {
-        return this.productService.findAll();
+        const products = await this.productService.findAll();
+        for (const product of products) {
+            const offers: any = await this.offerProductService.findActiveOffersByProduct(product.productId);
+            // get the offer with the highest discount
+            product.offers = offers;
+        }
+
+        return products;
     }
 
     @Get(':id')

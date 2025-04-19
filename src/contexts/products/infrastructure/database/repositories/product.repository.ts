@@ -8,18 +8,19 @@ import { IProductRepository } from '../../../domain/ports/product-repository.por
 export class ProductRepository implements IProductRepository {
     constructor(
         @InjectRepository(Product)
-        private readonly repo: Repository<Product>,
+        private readonly repo: Repository<Product>
     ) { }
 
     async findAll(): Promise<Product[]> {
         try {
-            return await this.repo.find({
+            const products = await this.repo.find({
                 select: ['productId', 'name', 'price', 'description', 'imageUrl', 'sku', 'category', 'stock'],
                 cache: false,
                 order: {
                     productId: 'ASC',
                 }
             });
+            return products;
         } catch (error) {
             throw new Error(`Error finding all products: ${error.message}`);
         }

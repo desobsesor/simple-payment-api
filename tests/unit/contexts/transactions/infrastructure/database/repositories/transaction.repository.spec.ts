@@ -7,7 +7,7 @@ import { TransactionItem } from '../../../../../../../src/contexts/transactions/
 import { PaymentMethod } from '../../../../../../../src/contexts/transactions/infrastructure/database/entities/payment-method.orm-entity';
 import { User } from '../../../../../../../src/contexts/users/domain/models/user.entity';
 import { Product } from '../../../../../../../src/contexts/products/domain/models/product.entity';
-import { Transaction as DomainTransaction } from '../../../../../../../src/contexts/transactions/domain/entities/transaction.entity';
+import { Transaction as DomainTransaction } from '../../../../../../../src/contexts/transactions/domain/models/transaction.entity';
 import { add } from 'winston';
 
 describe('TransactionRepository', () => {
