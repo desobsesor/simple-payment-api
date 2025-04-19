@@ -37,7 +37,12 @@ export class ProductController {
     @ApiResponse({ status: 200, description: 'Product found', type: Product })
     @ApiResponse({ status: 404, description: 'Product not found' })
     async findOne(@Param('id') id: string): Promise<Product> {
-        return this.productService.findOne(+id);
+        const product = await this.productService.findOne(+id);
+        const offers: any = await this.offerProductService.findActiveOffersByProduct(product.productId);
+
+        product.offers = offers;
+
+        return product;
     }
 
     @Put(':id')
