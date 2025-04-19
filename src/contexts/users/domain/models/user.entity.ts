@@ -1,4 +1,4 @@
-import { Transaction } from "../../../../../src/contexts/transactions/domain/entities/transaction.entity";
+import { Transaction } from "../../../transactions/domain/models/transaction.entity";
 
 export class User {
     constructor(

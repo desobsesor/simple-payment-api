@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { OfferProduct } from '../../../products/infrastructure/database/entities/offer-product.orm-entity';
 import { Product } from '../../../products/infrastructure/database/entities/product.orm-entity';
 import { ProductModule } from '../../../products/infrastructure/http-api/product.module';
 import { PaymentGatewayService } from '../../../shared/infrastructure/services/payment-gateway.service';
@@ -26,7 +27,8 @@ import { WebsocketsModule } from '@/src/contexts/shared/infrastructure/websocket
             TransactionItem,
             User,
             Product,
-            InventoryHistory
+            InventoryHistory,
+            OfferProduct
         ]),
         ProductModule,
         UserModule,
