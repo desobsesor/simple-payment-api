@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from '../../../../products/domain/models/product.entity';
 import { User } from '../../../../users/domain/models/user.entity';
-import { Transaction as DomainTransaction } from '../../../domain/entities/transaction.entity';
+import { Transaction as DomainTransaction } from '../../../domain/models/transaction.entity';
 import { TransactionRepositoryPort } from '../../../domain/ports/transaction.repository.port';
 import { PaymentMethod } from '../entities/payment-method.orm-entity';
 import { TransactionItem } from '../entities/transaction-item.orm-entity';

@@ -12,6 +12,8 @@ import { InventoryHistoryController } from './inventory-history.controller';
 import { UserModule } from '../../../../../src/contexts/users/infrastructure/http-api/user.module';
 import { TransactionModule } from '../../../../../src/contexts/transactions/infrastructure/http-api/transaction.module';
 import { UserRepository } from '../../../../../src/contexts/users/infrastructure/database/repositories/user.repository';
+import { OfferProductRepository } from '../../../../../src/contexts/products/infrastructure/database/repositories/offer-product.repository';
+import { OfferProduct } from '../../../../../src/contexts/products/domain/models/offer-product.entity';
 
 @Module({
     imports: [
@@ -19,7 +21,8 @@ import { UserRepository } from '../../../../../src/contexts/users/infrastructure
             InventoryHistory,
             Transaction,
             Product,
-            User
+            User,
+            OfferProduct
         ]),
         ProductModule,
         UserModule,
@@ -38,6 +41,10 @@ import { UserRepository } from '../../../../../src/contexts/users/infrastructure
         {
             provide: 'ProductRepositoryPort',
             useClass: ProductRepository,
+        },
+        {
+            provide: 'OfferProductRepositoryPort',
+            useClass: OfferProductRepository,
         }
     ],
     controllers: [InventoryHistoryController],
